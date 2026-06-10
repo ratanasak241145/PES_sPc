@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PES — ระบบจัดการร้านซ่อม</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f5f3ef;--sf:#fff;--sf2:#f0ede8;--bd:#ddd9d2;--bd2:#c8c3ba;
+  --tx:#1a1815;--tx2:#6b6760;--tx3:#9c9891;
+  --ac:#2d5a3d;--acl:#e8f0ea;--acm:#b0d4bc;
+  --dn:#a32020;--dnl:#fde8e8;--wn:#7a5c00;--wnl:#fdf5e0;
+  --in:#1a4a7a;--inl:#e8f0fa;--or:#7a3a00;--orl:#fdf0e8;
+  --pu:#4a2080;--pul:#f0ebfa;--r:8px;--rl:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);font-size:15px;line-height:1.6;min-height:100vh}
+.shell{display:flex;min-height:100vh}
+.sb{width:220px;min-height:100vh;background:var(--sf);border-right:1px solid var(--bd);position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100;transition:transform .25s;display:flex;flex-direction:column}
+.sb-logo{padding:16px 18px 12px;border-bottom:1px solid var(--bd)}
+.sb-logo h1{font-size:14px;font-weight:600;color:var(--ac)}
+.sb-logo p{font-size:11px;color:var(--tx3)}
+.sb nav{padding:8px}
+.sb-sec{font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;padding:10px 10px 4px}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r);font-size:13px;color:var(--tx2);cursor:pointer;transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;font-family:'Sarabun',sans-serif}
+.ni:hover{background:var(--sf2);color:var(--tx)}.ni.active{background:var(--acl);color:var(--ac);font-weight:500}
+.main{margin-left:220px;flex:1}
+.topbar{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:15px;font-weight:500}
+.hbg{display:none;background:none;border:none;cursor:pointer;font-size:20px;color:var(--tx2);padding:4px}
+.content{padding:18px;max-width:1300px}
+.sr5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.sc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);padding:12px 14px}
+.sl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.sv{font-size:20px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.sv.g{color:var(--ac)}.sv.r{color:var(--dn)}.sv.b{color:var(--in)}.sv.o{color:var(--or)}.sv.p{color:var(--pu)}.sv.w{color:var(--wn)}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.ch{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.ch h2{font-size:14px;font-weight:500}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px}
+input,select,textarea{padding:7px 10px;border:1px solid var(--bd);border-radius:var(--r);font-family:'Sarabun',sans-serif;font-size:13px;color:var(--tx);background:var(--bg);width:100%;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 2px rgba(45,90,61,.1)}
+textarea{resize:vertical;min-height:60px}
+input[readonly]{background:var(--sf2)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r);font-family:'Sarabun',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent;white-space:nowrap}
+.bp{background:var(--ac);color:#fff;border-color:var(--ac)}.bp:hover{background:#234a31}
+.bs{background:var(--sf);color:var(--tx);border-color:var(--bd2)}.bs:hover{background:var(--sf2)}
+.bd2{background:var(--dnl);color:var(--dn);border-color:#f0b0b0}
+.bg{background:var(--acl);color:var(--ac);border-color:var(--acm)}
+.bsm{padding:4px 9px;font-size:12px}.bic{padding:5px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--bd);background:var(--sf2);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sf2)}
+.tw{overflow-x:auto}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;white-space:nowrap}
+.bWait{background:var(--wnl);color:var(--wn)}.bDone{background:var(--acl);color:var(--ac)}.bTaken{background:var(--inl);color:var(--in)}.bAppt{background:var(--pul);color:var(--pu)}.bParts{background:var(--orl);color:var(--or)}.bCancel{background:var(--dnl);color:var(--dn)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--sf);border-radius:var(--rl);width:100%;max-width:640px;margin:auto}
+.modal-lg{max-width:880px}
+.mh{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--sf);z-index:1;border-radius:var(--rl) var(--rl) 0 0}
+.mh h3{font-size:15px;font-weight:500}
+.mb{padding:16px}.mf{padding:10px 16px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
+.page{display:none}.page.active{display:block}
+.fbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.fbar input,.fbar select{max-width:155px}
+.est{text-align:center;padding:32px 20px;color:var(--tx3)}
+.est .ic{font-size:28px;margin-bottom:6px}.est p{font-size:13px}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--tx);color:#fff;padding:10px 14px;border-radius:var(--r);font-size:13px;z-index:999;transform:translateY(80px);opacity:0;transition:all .25s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.sb-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+.mn{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.dv{height:1px;background:var(--bd);margin:12px 0}
+.cib{background:var(--acl);border:1px solid var(--acm);border-radius:var(--r);padding:10px 12px;margin-top:6px}
+.iac{background:var(--wnl);border:1px solid #e8d090;border-radius:var(--r);padding:10px 12px;margin-top:6px}
+.sec-hd{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;background:var(--sf2);color:var(--tx2)}
+.cal-wrap{overflow-x:auto}
+.cal-grid{display:grid;grid-template-columns:56px repeat(7,1fr);border-left:1px solid var(--bd);border-top:1px solid var(--bd);min-width:560px}
+.ch2{background:var(--sf2);padding:5px 3px;text-align:center;font-size:11px;font-weight:500;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+.ch2.tcol{background:var(--acl);color:var(--ac)}
+.ct{padding:3px 5px;font-size:10px;color:var(--tx3);text-align:right;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);font-family:'IBM Plex Mono',monospace}
+.cc{border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);min-height:34px;padding:2px;cursor:pointer}
+.cc:hover{background:var(--sf2)}.cc.tcol{background:rgba(45,90,61,.03)}
+.ca{border-left:2px solid var(--ac);background:var(--acl);border-radius:3px;padding:1px 4px;font-size:10px;color:var(--ac);margin-bottom:1px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ca.ap{background:var(--pul);border-color:var(--pu);color:var(--pu)}
+.emp-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);padding:14px;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.ava{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--sf2);flex-shrink:0;border:2px solid var(--bd)}
+.ava-ph{width:52px;height:52px;border-radius:50%;background:var(--sf2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--bd)}
+.pbar{height:6px;background:var(--sf2);border-radius:99px;overflow:hidden;margin-top:3px}
+.pfill{height:100%;background:var(--ac);border-radius:99px}
+.dfrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px}
+input[type="file"]{background:var(--sf);padding:5px}
+.img-prev{max-width:100%;max-height:100px;border-radius:var(--r);margin-top:4px}
+.slip-th{width:48px;height:48px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--bd)}
+@media(max-width:768px){
+  .sb{transform:translateX(-220px)}.sb.open{transform:translateX(0)}
+  .sb-back.show{display:block}.main{margin-left:0}.hbg{display:block}
+  .sr5{grid-template-columns:1fr 1fr}.g2,.g3,.g4{grid-template-columns:1fr}
+  .content{padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sb" id="sidebar">
+  <div class="sb-logo"><h1>⚡ PES ร้านซ่อมไฟฟ้า</h1><p>ระบบจัดการร้าน</p></div>
+  <nav>
+    <div class="sb-sec">หลัก</div>
+    <button class="ni active" onclick="goPage('dash')"><span>📊</span> ภาพรวม</button>
+    <button class="ni" onclick="goPage('cal')"><span>📅</span> ตารางนัด</button>
+    <div class="sb-sec">งาน</div>
+    <button class="ni" onclick="goPage('jobs')"><span>🔧</span> งานซ่อม</button>
+    <button class="ni" onclick="goPage('devs')"><span>📺</span> สินค้าที่ซ่อม</button>
+    <div class="sb-sec">คลัง</div>
+    <button class="ni" onclick="goPage('parts')"><span>📦</span> อะไหล่</button>
+    <button class="ni" onclick="goPage('goods')"><span>🛍️</span> สินค้านำเข้า</button>
+    <div class="sb-sec">คน</div>
+    <button class="ni" onclick="goPage('custs')"><span>👥</span> ลูกค้า</button>
+    <button class="ni" onclick="goPage('staff')"><span>👤</span> พนักงาน</button>
+    <div class="sb-sec">การเงิน</div>
+    <button class="ni" onclick="goPage('exps')"><span>🧾</span> ค่าใช้จ่าย</button>
+    <button class="ni" onclick="goPage('sum')"><span>📈</span> สรุปรายเดือน</button>
+  </nav>
+</aside>
+<div class="sb-back" id="sb-back" onclick="closeSB()"></div>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="hbg" onclick="toggleSB()">☰</button>
+      <span class="topbar-title" id="pg-title">ภาพรวม</span>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn bg bsm" id="btn-xl" onclick="exportExcel()" style="display:none">⬇ Excel</button>
+      <button class="btn bp bsm" id="btn-add" onclick="openJobModal()">+ เพิ่มงานซ่อม</button>
+    </div>
+  </div>
+  <div class="content">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dash">
+  <div class="dfrow">
+    <span style="font-size:13px;font-weight:500">📅 ช่วงเวลา:</span>
+    <input type="date" id="df" onchange="renderDash()" style="max-width:140px">
+    <span style="font-size:12px;color:var(--tx3)">ถึง</span>
+    <input type="date" id="dt" onchange="renderDash()" style="max-width:140px">
+    <button class="btn bs bsm" onclick="setToday()">วันนี้</button>
+    <button class="btn bs bsm" onclick="setMonth()">เดือนนี้</button>
+    <button class="btn bs bsm" onclick="clearDF()">ทั้งหมด</button>
+  </div>
+  <div class="sr5" id="d-stats"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="card"><div class="ch"><h2>สถานะงาน</h2></div><div style="padding:14px" id="d-chart"></div></div>
+    <div class="card"><div class="ch"><h2>งานล่าสุด</h2><button class="btn bs bsm" onclick="goPage('jobs')">ดูทั้งหมด</button></div><div id="d-jobs"></div></div>
+    <div class="card"><div class="ch"><h2>นัดวันนี้</h2><button class="btn bs bsm" onclick="goPage('cal')">ตาราง</button></div><div id="d-appts"></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card"><div class="ch"><h2>สรุปช่าง</h2></div><div id="d-tech"></div></div>
+    <div class="card"><div class="ch"><h2>ลูกค้าล่าสุด</h2><button class="btn bs bsm" onclick="goPage('custs')">ดูทั้งหมด</button></div><div id="d-custs"></div></div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="page" id="page-cal">
+  <div class="sec-hd">
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn bs bsm" onclick="calPrev()">◀</button>
+      <span id="cal-lbl" style="font-size:14px;font-weight:500;min-width:200px;text-align:center"></span>
+      <button class="btn bs bsm" onclick="calNext()">▶</button>
+      <button class="btn bs bsm" onclick="calNow()">สัปดาห์นี้</button>
+    </div>
+    <button class="btn bp bsm" onclick="openApptModal()">+ เพิ่มนัด</button>
+  </div>
+  <div class="card"><div class="cal-wrap"><div class="cal-grid" id="cal-grid"></div></div></div>
+  <div class="card" style="margin-top:14px">
+    <div class="ch"><h2>รายการนัดในสัปดาห์</h2></div>
+    <div class="tw"><table><thead><tr><th>วัน/เวลา</th><th>ลูกค้า</th><th>งาน</th><th>ประเภท</th><th>หมายเหตุ</th><th></th></tr></thead><tbody id="cal-tb"></tbody></table></div>
+    <div id="cal-em" class="est" style="display:none"><p>ไม่มีนัดในสัปดาห์นี้</p></div>
+  </div>
+</div>
+
+<!-- JOBS -->
+<div class="page" id="page-jobs">
+  <div class="sec-hd">
+    <div class="fbar" style="margin-bottom:0">
+      <input type="text" id="j-q" placeholder="ค้นหา..." oninput="renderJobs()" style="max-width:120px">
+      <select id="j-st" onchange="renderJobs()">
+        <option value="">ทุกสถานะ</option>
+        <option>รอซ่อม</option><option>รอเบิกอะไหล่</option><option>นัดลูกค้าแล้ว</option>
+        <option>ซ่อมเสร็จ</option><option>รับคืนแล้ว</option><option>ลูกค้าไม่ซ่อม</option>
+      </select>
+      <select id="j-tp" onchange="renderJobs()"><option value="">ทุกประเภท</option><option value="shop">ร้าน (PES)</option><option value="site">นอกสถานที่ (PESR)</option></select>
+      <input type="date" id="j-df" onchange="renderJobs()">
+      <span style="font-size:12px;color:var(--tx3)">–</span>
+      <input type="date" id="j-dt" onchange="renderJobs()">
+      <button class="btn bs bsm" onclick="clrJF()">ล้าง</button>
+    </div>
+    <button class="btn bp bsm" onclick="openJobModal()">+ เพิ่มงานซ่อม</button>
+  </div>
+  <div class="card">
+    <div class="tw"><table>
+      <thead><tr><th>รหัส</th><th>วันที่</th><th>ลูกค้า</th><th>สินค้า</th><th>แอดมิน</th><th>ช่าง</th><th>ค่าแรง</th><th>อะไหล่</th><th>รวม</th><th>สถานะ</th><th>นัด</th><th></th></tr></thead>
+      <tbody id="j-tb"></tbody>
+    </table></div>
+    <div id="j-em" class="est" style="display:none"><div class="ic">🔧</div><p>ไม่พบงาน</p></div>
+  </div>
+</div>
+
+<!-- DEVICES -->
+<div class="page" id="page-devs">
+  <div class="sec-hd">
+    <div class="fbar" style="margin-bottom:0">
+      <input type="text" id="dv-q" placeholder="ค้นหา..." oninput="renderDevs()" style="max-width:160px">
+      <select id="dv-cat" onchange="renderDevs()"><option value="">ทุกประเภท</option></select>
+    </div>
+    <button class="btn bp bsm" onclick="openDevModal()">+ เพิ่มสินค้า</button>
+  </div>
+  <div class="card">
+    <div class="tw"><table><thead><tr><th>ประเภท</th><th>ยี่ห้อ</th><th>รุ่น</th><th>รหัส/S/N</th><th>อาการ</th><th>เจ้าของ</th><th>งานซ่อม</th><th></th></tr></thead><tbody id="dv-tb"></tbody></table></div>
+    <div id="dv-em" class="est" style="display:none"><div class="ic">📺</div><p>ยังไม่มี</p></div>
+  </div>
+</div>
+
+<!-- PARTS -->
+<div class="page" id="page-parts">
+  <div class="sec-hd">
+    <div class="fbar" style="margin-bottom:0">
+      <input type="text" id="p-q" placeholder="ค้นหา..." oninput="renderParts()" style="max-width:140px">
+      <select id="p-st" onchange="renderParts()"><option value="">ทุกสถานะ</option><option value="ok">มีสต็อก</option><option value="low">ใกล้หมด</option><option value="out">หมด</option></select>
+    </div>
+    <button class="btn bp bsm" onclick="openPartModal()">+ เพิ่มอะไหล่</button>
+  </div>
+  <div class="card">
+    <div class="tw"><table><thead><tr><th>รหัส</th><th>ชื่ออะไหล่</th><th>จำนวน</th><th>ต่ำสุด</th><th>ราคาซื้อ</th><th>ราคาขาย</th><th>แหล่งที่มา</th><th>วันนำเข้า</th><th>วันจ่ายล่าสุด</th><th>สลิป</th><th>สถานะ</th><th></th></tr></thead><tbody id="p-tb"></tbody></table></div>
+    <div id="p-em" class="est" style="display:none"><div class="ic">📦</div><p>ยังไม่มี</p></div>
+  </div>
+</div>
+
+<!-- GOODS -->
+<div class="page" id="page-goods">
+  <div class="sec-hd">
+    <input type="text" id="g-q" placeholder="ค้นหา..." oninput="renderGoods()" style="max-width:200px">
+    <button class="btn bp bsm" onclick="openGoodModal()">+ เพิ่มสินค้า</button>
+  </div>
+  <div class="card">
+    <div class="tw"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>ประเภท</th><th>จำนวน</th><th>ราคาซื้อ</th><th>ราคาขาย</th><th>แหล่งที่มา</th><th>วันนำเข้า</th><th>สลิป</th><th></th></tr></thead><tbody id="g-tb"></tbody></table></div>
+    <div id="g-em" class="est" style="display:none"><div class="ic">🛍️</div><p>ยังไม่มี</p></div>
+  </div>
+</div>
+
+<!-- CUSTOMERS -->
+<div class="page" id="page-custs">
+  <div class="sec-hd">
+    <input type="text" id="c-q" placeholder="ค้นหา..." oninput="renderCusts()" style="max-width:200px">
+    <button class="btn bp bsm" onclick="openCustModal()">+ เพิ่มลูกค้า</button>
+  </div>
+  <div class="card">
+    <div class="tw"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>เบอร์</th><th>Line</th><th>ที่อยู่</th><th>งานซ่อม</th><th>ยอดรวม</th><th></th></tr></thead><tbody id="c-tb"></tbody></table></div>
+    <div id="c-em" class="est" style="display:none"><div class="ic">👥</div><p>ไม่พบ</p></div>
+  </div>
+</div>
+
+<!-- STAFF -->
+<div class="page" id="page-staff">
+  <div class="sec-hd">
+    <select id="sf-dept" onchange="renderStaff()"><option value="">ทุกแผนก</option><option>แผนกรับซ่อม</option><option>แผนกช่างซ่อม</option></select>
+    <button class="btn bp bsm" onclick="openStaffModal()">+ เพิ่มพนักงาน</button>
+  </div>
+  <div id="staff-list"></div>
+</div>
+
+<!-- EXPENSES -->
+<div class="page" id="page-exps">
+  <div class="sec-hd">
+    <select id="e-mo" onchange="renderExps()"></select>
+    <button class="btn bp bsm" onclick="openExpModal()">+ บันทึกค่าใช้จ่าย</button>
+  </div>
+  <div class="card">
+    <div class="ch"><h2>ค่าใช้จ่าย</h2><span class="mn" id="e-tot" style="color:var(--dn);font-weight:500"></span></div>
+    <div class="tw"><table><thead><tr><th>วันที่</th><th>รายการ</th><th>หมวด</th><th>พนักงาน</th><th>จำนวน</th><th></th></tr></thead><tbody id="e-tb"></tbody></table></div>
+    <div id="e-em" class="est" style="display:none"><p>ไม่มีค่าใช้จ่าย</p></div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="page" id="page-sum">
+  <div class="fbar" style="margin-bottom:14px">
+    <label style="font-size:12px;font-weight:500">เดือน</label>
+    <select id="s-mo" onchange="renderSum()"></select>
+  </div>
+  <div class="sr5" id="s-stats"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card"><div class="ch"><h2>งานซ่อม (ซ่อมแล้ว)</h2></div><div class="tw"><table><thead><tr><th>วันที่</th><th>รหัส</th><th>ลูกค้า</th><th>รวม</th><th>สถานะ</th></tr></thead><tbody id="s-jt"></tbody></table><div id="s-je" class="est" style="display:none"><p>ไม่มี</p></div></div></div>
+    <div class="card"><div class="ch"><h2>ค่าใช้จ่าย</h2></div><div class="tw"><table><thead><tr><th>วันที่</th><th>รายการ</th><th>จำนวน</th></tr></thead><tbody id="s-et"></tbody></table><div id="s-ee" class="est" style="display:none"><p>ไม่มี</p></div></div></div>
+  </div>
+</div>
+
+  </div><!-- content -->
+</div><!-- main -->
+</div><!-- shell -->
+
+<!-- ===== MODALS ===== -->
+<!-- JOB MODAL -->
+<div class="overlay" id="modal-job">
+<div class="modal modal-lg">
+  <div class="mh"><h3 id="jm-t">บันทึกงานซ่อม</h3><button class="btn bs bic" onclick="closeModal('modal-job')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="jm-id">
+    <div class="g3" style="margin-bottom:10px">
+      <div class="fg"><label class="fl">ลูกค้า</label><select id="jm-c" onchange="onCS()"><option value="">— เลือกหรือเพิ่มใหม่ —</option><option value="__new__">➕ เพิ่มใหม่...</option></select></div>
+      <div class="fg"><label class="fl">วันที่รับ</label><input type="date" id="jm-d"></div>
+      <div class="fg"><label class="fl">ประเภทงาน</label><select id="jm-tp" onchange="updCode()"><option value="shop">🏪 ร้าน (PES)</option><option value="site">🚗 นอกสถานที่ (PESR)</option></select></div>
+    </div>
+    <div id="iac-f" style="display:none" class="iac">
+      <div style="font-size:12px;font-weight:500;color:var(--wn);margin-bottom:8px">➕ ลูกค้าใหม่</div>
+      <div class="g2"><div class="fg"><label class="fl">ชื่อ *</label><input type="text" id="jc-nm"></div><div class="fg"><label class="fl">เบอร์</label><input type="tel" id="jc-ph"></div><div class="fg"><label class="fl">Line ID</label><input type="text" id="jc-ln"></div><div class="fg full"><label class="fl">ที่อยู่</label><input type="text" id="jc-ad"></div></div>
+    </div>
+    <div id="ci-box" style="display:none" class="cib"><div style="font-weight:500;font-size:13px" id="ci-nm"></div><div style="font-size:12px;color:var(--tx2)"><span id="ci-ph"></span> <span id="ci-ln"></span></div></div>
+    <div class="dv"></div>
+    <div class="g3" style="margin-bottom:10px">
+      <div class="fg"><label class="fl">รหัสงาน</label><input type="text" id="jm-code" readonly style="font-family:'IBM Plex Mono',monospace;font-size:12px"></div>
+      <div class="fg"><label class="fl">แอดมินรับงาน</label><select id="jm-adm"><option value="">— เลือก —</option></select></div>
+      <div class="fg"><label class="fl">ช่างรับผิดชอบ</label><select id="jm-tec"><option value="">— เลือก —</option></select></div>
+    </div>
+    <div class="g4" style="margin-bottom:10px">
+      <div class="fg"><label class="fl">ประเภทสินค้า</label><select id="jm-dc"><option value="">— เลือก —</option><option>เครื่องปรับอากาศ</option><option>ตู้เย็น</option><option>ตู้แช่</option><option>เครื่องซักผ้า</option><option>ทีวี</option><option>พัดลม</option><option>เครื่องทำน้ำอุ่น</option><option>ไมโครเวฟ</option><option>อื่นๆ</option></select></div>
+      <div class="fg"><label class="fl">ยี่ห้อ</label><input type="text" id="jm-br" placeholder="เช่น Mitsubishi"></div>
+      <div class="fg"><label class="fl">รุ่น</label><input type="text" id="jm-mo"></div>
+      <div class="fg"><label class="fl">รหัส/S/N</label><input type="text" id="jm-sn"></div>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <div class="fg"><label class="fl">อาการเสีย</label><textarea id="jm-sym" style="min-height:52px"></textarea></div>
+      <div class="fg"><label class="fl">หมายเหตุ</label><textarea id="jm-nt" style="min-height:52px"></textarea></div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="fl" style="display:block;margin-bottom:6px">อะไหล่ที่ใช้ (ตัดสต็อกอัตโนมัติเมื่อซ่อมเสร็จ)</label>
+      <div id="jpr-list"></div>
+      <button class="btn bs bsm" style="margin-top:6px" onclick="addJPR()">+ เพิ่มอะไหล่</button>
+    </div>
+    <div class="dv"></div>
+    <div class="g4" style="margin-bottom:10px">
+      <div class="fg"><label class="fl">ค่าแรง (฿)</label><input type="number" id="jm-lb" placeholder="0" min="0" oninput="calcJT()"></div>
+      <div class="fg"><label class="fl">ค่าอะไหล่ (฿)</label><input type="number" id="jm-pt" placeholder="0" readonly></div>
+      <div class="fg"><label class="fl">ค่าบริการ (฿)</label><input type="number" id="jm-sv" placeholder="0" min="0" oninput="calcJT()"></div>
+      <div class="fg"><label class="fl">รวม (฿)</label><input type="text" id="jm-tot" readonly style="font-weight:500"></div>
+    </div>
+    <div class="g3">
+      <div class="fg"><label class="fl">สถานะ</label><select id="jm-st" onchange="togAppt()"><option>รอซ่อม</option><option>รอเบิกอะไหล่</option><option>นัดลูกค้าแล้ว</option><option>ซ่อมเสร็จ</option><option>รับคืนแล้ว</option><option>ลูกค้าไม่ซ่อม</option></select></div>
+      <div class="fg" id="appt-row" style="display:none"><label class="fl">วันที่นัด</label><input type="datetime-local" id="jm-ap"></div>
+      <div class="fg"><label class="fl">วันรับเครื่องคืน</label><input type="date" id="jm-pk"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-job')">ยกเลิก</button><button class="btn bp" onclick="saveJob()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- APPT MODAL -->
+<div class="overlay" id="modal-appt">
+<div class="modal" style="max-width:440px">
+  <div class="mh"><h3 id="am-t">เพิ่มนัด</h3><button class="btn bs bic" onclick="closeModal('modal-appt')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="am-id">
+    <div class="g2">
+      <div class="fg"><label class="fl">ลูกค้า</label><select id="am-c"><option value="">— เลือก —</option></select></div>
+      <div class="fg"><label class="fl">งานซ่อม</label><select id="am-j"><option value="">— ไม่ระบุ —</option></select></div>
+      <div class="fg full"><label class="fl">วันที่ & เวลา</label><input type="datetime-local" id="am-dt"></div>
+      <div class="fg"><label class="fl">ประเภท</label><select id="am-type"><option>นัดซ่อม</option><option>นัดรับเครื่อง</option><option>นัดประเมิน</option><option>อื่นๆ</option></select></div>
+      <div class="fg full"><label class="fl">หมายเหตุ</label><textarea id="am-nt" style="min-height:48px"></textarea></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-appt')">ยกเลิก</button><button class="btn bp" onclick="saveAppt()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- DEVICE MODAL -->
+<div class="overlay" id="modal-dev">
+<div class="modal">
+  <div class="mh"><h3 id="dm-t">เพิ่มสินค้า</h3><button class="btn bs bic" onclick="closeModal('modal-dev')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="dm-id">
+    <div class="g2">
+      <div class="fg"><label class="fl">ประเภท *</label><select id="dm-cat"><option>เครื่องปรับอากาศ</option><option>ตู้เย็น</option><option>ตู้แช่</option><option>เครื่องซักผ้า</option><option>ทีวี</option><option>พัดลม</option><option>เครื่องทำน้ำอุ่น</option><option>ไมโครเวฟ</option><option>อื่นๆ</option></select></div>
+      <div class="fg"><label class="fl">ยี่ห้อ</label><input type="text" id="dm-br"></div>
+      <div class="fg"><label class="fl">รุ่น</label><input type="text" id="dm-mo"></div>
+      <div class="fg"><label class="fl">รหัส/S/N</label><input type="text" id="dm-sn"></div>
+      <div class="fg"><label class="fl">เจ้าของ</label><select id="dm-ow"><option value="">— ไม่ระบุ —</option></select></div>
+      <div class="fg full"><label class="fl">อาการ</label><textarea id="dm-sym" style="min-height:48px"></textarea></div>
+      <div class="fg full"><label class="fl">รูปสินค้า</label><input type="file" id="dm-img" accept="image/*" onchange="prevImg(this,'dm-pv','dm-imgd')"><img id="dm-pv" class="img-prev" style="display:none;max-height:140px;border-radius:var(--r);object-fit:cover"><input type="hidden" id="dm-imgd"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-dev')">ยกเลิก</button><button class="btn bp" onclick="saveDev()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- PART MODAL -->
+<div class="overlay" id="modal-part">
+<div class="modal">
+  <div class="mh"><h3 id="pm-t">เพิ่มอะไหล่</h3><button class="btn bs bic" onclick="closeModal('modal-part')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="pm-id">
+    <div class="g2">
+      <div class="fg"><label class="fl">รหัส</label><input type="text" id="pm-code"></div>
+      <div class="fg"><label class="fl">ชื่ออะไหล่ *</label><input type="text" id="pm-nm"></div>
+      <div class="fg"><label class="fl">จำนวนรับเข้า</label><input type="number" id="pm-qty" min="0" placeholder="0"></div>
+      <div class="fg"><label class="fl">จำนวนขั้นต่ำ</label><input type="number" id="pm-min" min="0" placeholder="1"></div>
+      <div class="fg"><label class="fl">ราคาซื้อ/ชิ้น (฿)</label><input type="number" id="pm-buy" min="0" placeholder="0"></div>
+      <div class="fg"><label class="fl">ราคาขาย/ชิ้น (฿)</label><input type="number" id="pm-sel" min="0" placeholder="0"></div>
+      <div class="fg"><label class="fl">วันนำเข้า</label><input type="date" id="pm-din"></div>
+      <div class="fg"><label class="fl">แหล่งที่มา</label><input type="text" id="pm-src"></div>
+      <div class="fg full"><label class="fl">หมายเหตุ</label><textarea id="pm-nt" style="min-height:44px"></textarea></div>
+      <div class="fg full"><label class="fl">รูปสินค้า</label><input type="file" id="pm-img" accept="image/*" onchange="prevImg(this,'pm-imgpv','pm-imgd')"><img id="pm-imgpv" class="img-prev" style="display:none;max-height:120px;object-fit:cover"><input type="hidden" id="pm-imgd"></div>
+      <div class="fg full"><label class="fl">สลิป</label><input type="file" id="pm-sl" accept="image/*" onchange="prevImg(this,'pm-pv','pm-sd')"><img id="pm-pv" class="img-prev" style="display:none"><input type="hidden" id="pm-sd"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-part')">ยกเลิก</button><button class="btn bp" onclick="savePart()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- GOOD MODAL -->
+<div class="overlay" id="modal-good">
+<div class="modal">
+  <div class="mh"><h3 id="gm-t">เพิ่มสินค้านำเข้า</h3><button class="btn bs bic" onclick="closeModal('modal-good')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="gm-id">
+    <div class="g2">
+      <div class="fg"><label class="fl">รหัส</label><input type="text" id="gm-code"></div>
+      <div class="fg"><label class="fl">ชื่อสินค้า *</label><input type="text" id="gm-nm"></div>
+      <div class="fg"><label class="fl">ประเภท</label><input type="text" id="gm-cat"></div>
+      <div class="fg"><label class="fl">จำนวน</label><input type="number" id="gm-qty" min="1" placeholder="1"></div>
+      <div class="fg"><label class="fl">ราคาซื้อ (฿)</label><input type="number" id="gm-buy" placeholder="0"></div>
+      <div class="fg"><label class="fl">ราคาขาย (฿)</label><input type="number" id="gm-sel" placeholder="0"></div>
+      <div class="fg"><label class="fl">วันนำเข้า</label><input type="date" id="gm-din"></div>
+      <div class="fg"><label class="fl">แหล่งที่มา</label><input type="text" id="gm-src"></div>
+      <div class="fg full"><label class="fl">รูปสินค้า</label><input type="file" id="gm-img" accept="image/*" onchange="prevImg(this,'gm-imgpv','gm-imgd')"><img id="gm-imgpv" class="img-prev" style="display:none;max-height:120px;object-fit:cover"><input type="hidden" id="gm-imgd"></div>
+      <div class="fg full"><label class="fl">สลิป</label><input type="file" id="gm-sl" accept="image/*" onchange="prevImg(this,'gm-pv','gm-sd')"><img id="gm-pv" class="img-prev" style="display:none"><input type="hidden" id="gm-sd"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-good')">ยกเลิก</button><button class="btn bp" onclick="saveGood()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- CUSTOMER MODAL -->
+<div class="overlay" id="modal-cust">
+<div class="modal" style="max-width:500px">
+  <div class="mh"><h3 id="cm-t">ข้อมูลลูกค้า</h3><button class="btn bs bic" onclick="closeModal('modal-cust')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="cm-id">
+    <div class="g2">
+      <div class="fg"><label class="fl">ชื่อ *</label><input type="text" id="cm-nm"></div>
+      <div class="fg"><label class="fl">เบอร์</label><input type="tel" id="cm-ph"></div>
+      <div class="fg"><label class="fl">Line ID</label><input type="text" id="cm-ln"></div>
+      <div class="fg"><label class="fl">วันที่เพิ่ม</label><input type="date" id="cm-dt"></div>
+      <div class="fg full"><label class="fl">ที่อยู่</label><textarea id="cm-ad" style="min-height:44px"></textarea></div>
+      <div class="fg full"><label class="fl">หมายเหตุ</label><textarea id="cm-nt" style="min-height:44px"></textarea></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-cust')">ยกเลิก</button><button class="btn bp" onclick="saveCust()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- STAFF MODAL -->
+<div class="overlay" id="modal-staff">
+<div class="modal">
+  <div class="mh"><h3 id="sm-t">ข้อมูลพนักงาน</h3><button class="btn bs bic" onclick="closeModal('modal-staff')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="sm-id">
+    <div class="g2">
+      <div class="fg"><label class="fl">ชื่อ-นามสกุล *</label><input type="text" id="sm-nm"></div>
+      <div class="fg"><label class="fl">ตำแหน่ง</label><input type="text" id="sm-pos"></div>
+      <div class="fg"><label class="fl">แผนก</label><select id="sm-dept"><option>แผนกรับซ่อม</option><option>แผนกช่างซ่อม</option></select></div>
+      <div class="fg"><label class="fl">เบอร์</label><input type="tel" id="sm-ph"></div>
+      <div class="fg"><label class="fl">Line ID</label><input type="text" id="sm-ln"></div>
+      <div class="fg"><label class="fl">วันเริ่มงาน</label><input type="date" id="sm-start"></div>
+      <div class="fg"><label class="fl">เงินเดือน (฿)</label><input type="number" id="sm-sal" placeholder="0"></div>
+      <div class="fg"><label class="fl">OT/ชั่วโมง (฿)</label><input type="number" id="sm-ot" placeholder="0"></div>
+      <div class="fg full"><label class="fl">ภาพถ่าย</label><input type="file" id="sm-ph2" accept="image/*" onchange="prevImg(this,'sm-pv','sm-pd')"><img id="sm-pv" class="img-prev" style="display:none;border-radius:50%;width:80px;height:80px;object-fit:cover"><input type="hidden" id="sm-pd"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-staff')">ยกเลิก</button><button class="btn bp" onclick="saveStaff()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- EXP MODAL -->
+<div class="overlay" id="modal-exp">
+<div class="modal" style="max-width:420px">
+  <div class="mh"><h3>บันทึกค่าใช้จ่าย</h3><button class="btn bs bic" onclick="closeModal('modal-exp')">✕</button></div>
+  <div class="mb">
+    <div class="g2">
+      <div class="fg full"><label class="fl">รายการ</label><input type="text" id="em-nm"></div>
+      <div class="fg"><label class="fl">หมวด</label><select id="em-cat"><option>ค่าเช่า</option><option>ค่าไฟ</option><option>ค่าน้ำ</option><option>ค่าอุปกรณ์</option><option>เงินเดือน/โบนัส</option><option>เบ็ดเตล็ด</option></select></div>
+      <div class="fg"><label class="fl">วันที่</label><input type="date" id="em-dt"></div>
+      <div class="fg"><label class="fl">พนักงาน (เบิก)</label><select id="em-sf"><option value="">— ไม่ระบุ —</option></select></div>
+      <div class="fg full"><label class="fl">จำนวน (฿)</label><input type="number" id="em-amt" placeholder="0"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-exp')">ยกเลิก</button><button class="btn bp" onclick="saveExp()">บันทึก</button></div>
+</div>
+</div>
+
+<!-- RESTOCK MODAL -->
+<div class="overlay" id="modal-restock">
+<div class="modal" style="max-width:420px">
+  <div class="mh"><h3 id="rs-t">เพิ่มสต็อกอะไหล่</h3><button class="btn bs bic" onclick="closeModal('modal-restock')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="rs-id">
+    <div style="background:var(--sf2);border-radius:var(--r);padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:2px">อะไหล่ที่เลือก</div>
+      <div style="font-weight:500;font-size:14px" id="rs-nm-lbl"></div>
+      <div style="font-size:12px;color:var(--tx2);margin-top:2px">สต็อกปัจจุบัน: <span id="rs-cur-qty" style="font-weight:500;font-family:'IBM Plex Mono',monospace"></span> ชิ้น</div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label class="fl">จำนวนที่รับเข้า</label><input type="number" id="rs-qty" min="1" placeholder="จำนวน" style="font-size:16px;font-weight:500"></div>
+      <div class="fg"><label class="fl">วันที่รับเข้า</label><input type="date" id="rs-date"></div>
+      <div class="fg full"><label class="fl">หมายเหตุ (เช่น เลขที่ใบสั่งซื้อ)</label><input type="text" id="rs-note" placeholder="ไม่บังคับ"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bs" onclick="closeModal('modal-restock')">ยกเลิก</button><button class="btn bp" onclick="saveRestock()">+ เพิ่มสต็อก</button></div>
+</div>
+</div>
+
+<!-- PART USAGE LOG MODAL -->
+<div class="overlay" id="modal-part-log">
+<div class="modal">
+  <div class="mh"><h3 id="pl-t">ประวัติการใช้อะไหล่</h3><button class="btn bs bic" onclick="closeModal('modal-part-log')">✕</button></div>
+  <div class="mb" id="pl-body"></div>
+</div>
+</div>
+
+<!-- SLIP VIEWER -->
+<div class="overlay" id="modal-slip">
+<div class="modal" style="max-width:460px;text-align:center">
+  <div class="mh"><h3>สลิป</h3><button class="btn bs bic" onclick="closeModal('modal-slip')">✕</button></div>
+  <div class="mb"><img id="slip-img" style="max-width:100%;border-radius:var(--r)"></div>
+</div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="overlay" id="modal-hist">
+<div class="modal modal-lg">
+  <div class="mh"><h3 id="ht-t">ประวัติลูกค้า</h3><button class="btn bs bic" onclick="closeModal('modal-hist')">✕</button></div>
+  <div class="mb" id="ht-b"></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+// ── DATA ──
+let J=JSON.parse(localStorage.getItem('rs_j')||'[]');
+let C=JSON.parse(localStorage.getItem('rs_c')||'[]');
+let E=JSON.parse(localStorage.getItem('rs_e')||'[]');
+let P=JSON.parse(localStorage.getItem('rs_p')||'[]');
+let G=JSON.parse(localStorage.getItem('rs_g')||'[]');
+let S=JSON.parse(localStorage.getItem('rs_s')||'[]');
+let D=JSON.parse(localStorage.getItem('rs_d')||'[]');
+let A=JSON.parse(localStorage.getItem('rs_a')||'[]');
+let cp='dash', calWS=getWS(new Date()), jpr=[];
+
+function save(){
+  localStorage.setItem('rs_j',JSON.stringify(J));
+  localStorage.setItem('rs_c',JSON.stringify(C));
+  localStorage.setItem('rs_e',JSON.stringify(E));
+  localStorage.setItem('rs_p',JSON.stringify(P));
+  localStorage.setItem('rs_g',JSON.stringify(G));
+  localStorage.setItem('rs_s',JSON.stringify(S));
+  localStorage.setItem('rs_d',JSON.stringify(D));
+  localStorage.setItem('rs_a',JSON.stringify(A));
+}
+
+// ── UTILS ──
+function td(){return new Date().toISOString().split('T')[0];}
+function fmt(n){return '฿'+Number(n||0).toLocaleString('th-TH');}
+function fD(d){if(!d)return'';const p=String(d).split('T')[0].split('-');return`${p[2]}/${p[1]}/${parseInt(p[0])+543}`;}
+function fDT(d){if(!d)return'';const dt=new Date(d);return fD(dt.toISOString())+' '+dt.toTimeString().slice(0,5);}
+function moOf(d){return d?String(d).slice(0,7):'';}
+function nowMo(){return td().slice(0,7);}
+function gC(id){return C.find(c=>c.id==id);}
+function gS(id){return S.find(s=>s.id==id);}
+function gP(id){return P.find(p=>p.id==id);}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+function isInc(s){return s==='ซ่อมเสร็จ'||s==='รับคืนแล้ว';}
+function sbadge(s){
+  const m={'รอซ่อม':'bWait','รอเบิกอะไหล่':'bParts','นัดลูกค้าแล้ว':'bAppt','ซ่อมเสร็จ':'bDone','รับคืนแล้ว':'bTaken','ลูกค้าไม่ซ่อม':'bCancel'};
+  return`<span class="badge ${m[s]||'bWait'}">${s}</span>`;
+}
+function genJC(tp){
+  const pf=tp==='site'?'PESR':'PES';
+  const ex=J.filter(j=>j.type===tp).map(j=>{const n=parseInt((j.code||'').replace(pf,''));return isNaN(n)?0:n;});
+  const nx=(ex.length?Math.max(...ex):0)+1;
+  return pf+(tp==='site'?String(nx).padStart(4,'0'):String(nx).padStart(3,'0'));
+}
+function genCC(){
+  const ex=C.map(c=>{const n=parseInt((c.code||'').replace('CS',''));return isNaN(n)?0:n;});
+  return'CS'+String((ex.length?Math.max(...ex):0)+1).padStart(4,'0');
+}
+
+// ── NAV ──
+const PAGES=['dash','cal','jobs','devs','parts','goods','custs','staff','exps','sum'];
+const PCFG={
+  dash:{t:'ภาพรวม'},
+  cal:{t:'ตารางนัด',al:'+ เพิ่มนัด',af:'openApptModal'},
+  jobs:{t:'งานซ่อม',al:'+ เพิ่มงานซ่อม',af:'openJobModal',xl:1},
+  devs:{t:'สินค้าที่ซ่อม',al:'+ เพิ่มสินค้า',af:'openDevModal',xl:1},
+  parts:{t:'อะไหล่',al:'+ เพิ่มอะไหล่',af:'openPartModal',xl:1},
+  goods:{t:'สินค้านำเข้า',al:'+ เพิ่มสินค้า',af:'openGoodModal',xl:1},
+  custs:{t:'ลูกค้า',al:'+ เพิ่มลูกค้า',af:'openCustModal',xl:1},
+  staff:{t:'พนักงาน',al:'+ เพิ่มพนักงาน',af:'openStaffModal'},
+  exps:{t:'ค่าใช้จ่าย',xl:1},
+  sum:{t:'สรุปรายเดือน',xl:1}
+};
+function goPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.ni')[PAGES.indexOf(p)].classList.add('active');
+  cp=p;
+  const cfg=PCFG[p]||{};
+  document.getElementById('pg-title').textContent=cfg.t||p;
+  const ba=document.getElementById('btn-add'),bx=document.getElementById('btn-xl');
+  if(cfg.al){ba.style.display='';ba.textContent=cfg.al;ba.onclick=window[cfg.af];}
+  else ba.style.display='none';
+  bx.style.display=cfg.xl?'':'none';
+  closeSB();
+  const rs={dash:renderDash,cal:renderCal,jobs:renderJobs,devs:renderDevs,parts:renderParts,goods:renderGoods,custs:renderCusts,staff:renderStaff,exps:()=>{buildMo('e-mo');renderExps();},sum:()=>{buildMo('s-mo');renderSum();}};
+  if(rs[p])rs[p]();
+}
+function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-back').classList.toggle('show');}
+function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-back').classList.remove('show');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function prevImg(inp,pi,di){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{document.getElementById(pi).src=e.target.result;document.getElementById(pi).style.display='block';document.getElementById(di).value=e.target.result;};r.readAsDataURL(f);}
+function viewSlip(s){document.getElementById('slip-img').src=s;openModal('modal-slip');}
+function buildMo(id){
+  const s=new Set();J.forEach(j=>{if(j.date)s.add(moOf(j.date));});E.forEach(e=>{if(e.date)s.add(moOf(e.date));});
+  if(!s.size)s.add(nowMo());
+  const sel=document.getElementById(id);const cur=sel.value||nowMo();
+  const thM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  sel.innerHTML=[...s].filter(Boolean).sort().reverse().map(m=>{const[y,mo]=m.split('-');return`<option value="${m}"${m===cur?' selected':''}>${thM[parseInt(mo)-1]} ${parseInt(y)+543}</option>`;}).join('');
+}
+
+// ── DASHBOARD ──
+function setToday(){const t=td();document.getElementById('df').value=t;document.getElementById('dt').value=t;renderDash();}
+function setMonth(){const m=nowMo();document.getElementById('df').value=m+'-01';const d=new Date(m+'-01');d.setMonth(d.getMonth()+1);d.setDate(0);document.getElementById('dt').value=d.toISOString().split('T')[0];renderDash();}
+function clearDF(){document.getElementById('df').value='';document.getElementById('dt').value='';renderDash();}
+function clrJF(){document.getElementById('j-df').value='';document.getElementById('j-dt').value='';renderJobs();}
+
+function renderDash(){
+  const df=document.getElementById('df').value,dt=document.getElementById('dt').value;
+  const fj=j=>{if(df&&j.date<df)return false;if(dt&&j.date>dt)return false;return true;};
+  const all=J.filter(fj);
+  const done=all.filter(j=>isInc(j.status));
+  const wait=all.filter(j=>j.status==='รอซ่อม');
+  const pend=all.filter(j=>j.status==='รอเบิกอะไหล่');
+  const apptJ=all.filter(j=>j.status==='นัดลูกค้าแล้ว');
+  const nc=all.filter(j=>j.status==='ลูกค้าไม่ซ่อม');
+  const income=done.reduce((s,j)=>s+j.total,0);
+  const exptot=E.filter(e=>{if(df&&e.date<df)return false;if(dt&&e.date>dt)return false;return true;}).reduce((s,e)=>s+e.amount,0);
+  const profit=income-exptot;
+  document.getElementById('d-stats').innerHTML=`
+    <div class="sc"><div class="sl">รายรับ (ซ่อมแล้ว)</div><div class="sv g">${fmt(income)}</div></div>
+    <div class="sc"><div class="sl">กำไรสุทธิ</div><div class="sv ${profit>=0?'g':'r'}">${fmt(profit)}</div></div>
+    <div class="sc"><div class="sl">ซ่อมเสร็จ</div><div class="sv g">${done.length} งาน</div></div>
+    <div class="sc"><div class="sl">รอซ่อม/รอเบิก</div><div class="sv w">${wait.length+pend.length} งาน</div></div>
+    <div class="sc"><div class="sl">ลูกค้าไม่ซ่อม</div><div class="sv r">${nc.length} งาน</div></div>`;
+  const tot=all.length||1;
+  const stats=[{l:'ซ่อมเสร็จ/รับคืน',n:done.length,c:'var(--ac)'},{l:'รอซ่อม',n:wait.length,c:'var(--wn)'},{l:'รอเบิกอะไหล่',n:pend.length,c:'var(--or)'},{l:'นัดแล้ว',n:apptJ.length,c:'var(--pu)'},{l:'ไม่ซ่อม',n:nc.length,c:'var(--dn)'}];
+  document.getElementById('d-chart').innerHTML=stats.filter(s=>s.n>0).map(s=>`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span>${s.l}</span><span style="font-weight:500">${s.n} (${Math.round(s.n/tot*100)}%)</span></div><div class="pbar"><div class="pfill" style="width:${s.n/tot*100}%;background:${s.c}"></div></div></div>`).join('')||'<p style="font-size:13px;color:var(--tx3)">ยังไม่มีข้อมูล</p>';
+  const ta=A.filter(a=>a.datetime&&a.datetime.split('T')[0]===td());
+  document.getElementById('d-appts').innerHTML=ta.length?ta.map(a=>{const c=gC(a.custId);return`<div style="padding:8px 12px;border-bottom:1px solid var(--bd);font-size:13px"><div style="font-weight:500">${new Date(a.datetime).toTimeString().slice(0,5)} — ${c?c.name:''}</div><div style="font-size:12px;color:var(--tx2)">${a.type}${a.note?' · '+a.note:''}</div></div>`;}).join(''):`<div class="est" style="padding:20px"><p>ไม่มีนัดวันนี้</p></div>`;
+  const r5=[...J].sort((a,b)=>b.id-a.id).slice(0,5);
+  document.getElementById('d-jobs').innerHTML=r5.length?`<div class="tw"><table><thead><tr><th>รหัส</th><th>ลูกค้า</th><th>รวม</th><th>สถานะ</th></tr></thead><tbody>${r5.map(j=>`<tr><td class="mn" style="font-size:11px">${j.code||''}</td><td>${j.custName||'—'}</td><td class="mn">${fmt(j.total)}</td><td>${sbadge(j.status)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="est" style="padding:20px"><p>ยังไม่มีงาน</p></div>`;
+  const techs=S.filter(s=>s.dept==='แผนกช่างซ่อม');
+  document.getElementById('d-tech').innerHTML=techs.length?`<table style="font-size:13px;width:100%"><thead><tr><th>ช่าง</th><th>รับ</th><th>เสร็จ</th><th>รอ</th><th>%เสร็จ</th></tr></thead><tbody>${techs.map(t=>{const tj=all.filter(j=>j.techId==t.id);const td2=tj.filter(j=>isInc(j.status)).length;const tw=tj.filter(j=>!isInc(j.status)&&j.status!=='ลูกค้าไม่ซ่อม').length;const pct=tj.length?Math.round(td2/tj.length*100):0;return`<tr><td style="font-weight:500">${t.name}</td><td>${tj.length}</td><td style="color:var(--ac)">${td2}</td><td style="color:var(--wn)">${tw}</td><td><div class="pbar" style="width:70px;display:inline-block;vertical-align:middle"><div class="pfill" style="width:${pct}%"></div></div> ${pct}%</td></tr>`;}).join('')}</tbody></table>`:`<div class="est" style="padding:16px"><p>ไม่มีพนักงานช่าง</p></div>`;
+  const rc=[...C].sort((a,b)=>b.id-a.id).slice(0,5);
+  document.getElementById('d-custs').innerHTML=rc.length?`<div class="tw"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>เบอร์</th></tr></thead><tbody>${rc.map(c=>`<tr><td class="mn">${c.code||''}</td><td style="font-weight:500">${c.name}</td><td>${c.phone||'—'}</td></tr>`).join('')}</tbody></table></div>`:`<div class="est" style="padding:20px"><p>ยังไม่มีลูกค้า</p></div>`;
+}
+
+// ── CALENDAR ──
+function getWS(d){const dt=new Date(d);dt.setHours(0,0,0,0);const day=dt.getDay();dt.setDate(dt.getDate()-(day===0?6:day-1));return dt;}
+function calPrev(){calWS.setDate(calWS.getDate()-7);renderCal();}
+function calNext(){calWS.setDate(calWS.getDate()+7);renderCal();}
+function calNow(){calWS=getWS(new Date());renderCal();}
+function renderCal(){
+  const days=['จ','อ','พ','พฤ','ศ','ส','อา'];
+  const hrs=[8,9,10,11,12,13,14,15,16,17,18,19];
+  const ts=td();
+  const we=new Date(calWS);we.setDate(we.getDate()+6);
+  const thM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('cal-lbl').textContent=`${calWS.getDate()} ${thM[calWS.getMonth()]} — ${we.getDate()} ${thM[we.getMonth()]} ${we.getFullYear()+543}`;
+  const wd=[];for(let i=0;i<7;i++){const d=new Date(calWS);d.setDate(d.getDate()+i);wd.push(d);}
+  let h=`<div class="ch2"></div>`;
+  wd.forEach((d,i)=>{const ds=d.toISOString().split('T')[0];const it=ds===ts;h+=`<div class="ch2${it?' tcol':''}">${days[i]}<br><span style="font-size:13px;font-weight:600">${d.getDate()}</span></div>`;});
+  hrs.forEach(hr=>{
+    h+=`<div class="ct">${hr}:00</div>`;
+    wd.forEach(d=>{
+      const ds=d.toISOString().split('T')[0];const it=ds===ts;
+      const sa=A.filter(a=>{if(!a.datetime)return false;const[ad,at]=a.datetime.split('T');return ad===ds&&parseInt(at||'0')===hr;});
+      const sj=J.filter(j=>{if(!j.apptDT)return false;const[ad,at]=j.apptDT.split('T');return ad===ds&&parseInt(at||'0')===hr;});
+      h+=`<div class="cc${it?' tcol':''}" onclick="openApptModal(null,'${ds}','${hr}')">`;
+      sa.forEach(a=>{const c=gC(a.custId);h+=`<div class="ca ap" onclick="event.stopPropagation();editAppt(${a.id})">${c?c.name:a.type}</div>`;});
+      sj.forEach(j=>{
+        const isDone=isInc(j.status);
+        h+=`<div class="ca${isDone?' done-appt':''}" onclick="event.stopPropagation();openJobModal(${j.id})" style="${isDone?'background:var(--sf2);border-left-color:var(--tx3);color:var(--tx3);text-decoration:line-through':''}">${j.code||''} ${j.custName||''}${isDone?' ✓':''}</div>`;
+      });
+      h+=`</div>`;
+    });
+  });
+  document.getElementById('cal-grid').innerHTML=h;
+  const ws=wd[0].toISOString().split('T')[0],we2=wd[6].toISOString().split('T')[0];
+  const wA=[...A.filter(a=>a.datetime&&a.datetime>=ws&&a.datetime<=we2+'T23:59').map(a=>({...a,_t:'a'})),...J.filter(j=>j.apptDT&&j.apptDT>=ws&&j.apptDT<=we2+'T23:59').map(j=>({...j,datetime:j.apptDT,_t:'j'}))].sort((a,b)=>(a.datetime||'').localeCompare(b.datetime||''));
+  const tb=document.getElementById('cal-tb'),em=document.getElementById('cal-em');
+  if(!wA.length){tb.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  tb.innerHTML=wA.map(a=>{
+    if(a._t==='j')return`<tr style="${isInc(a.status)?'opacity:.65':''}" ><td style="white-space:nowrap">${fDT(a.datetime)}</td><td>${a.custName||'—'}</td><td class="mn">${a.code||''}</td><td>${sbadge(a.status)}</td><td>${isInc(a.status)?'<span style="font-size:11px;color:var(--ac)">✓ เสร็จสิ้น</span>':'—'}</td><td><button class="btn bs bsm" onclick="openJobModal(${a.id})">✏️</button></td></tr>`;
+    const c=gC(a.custId);
+    return`<tr><td style="white-space:nowrap">${fDT(a.datetime)}</td><td>${c?c.name:'—'}</td><td>—</td><td><span class="badge bAppt">${a.type}</span></td><td>${a.note||'—'}</td><td><button class="btn bs bsm bic" onclick="editAppt(${a.id})">✏️</button><button class="btn bd2 bsm bic" onclick="delAppt(${a.id})">🗑️</button></td></tr>`;
+  }).join('');
+}
+function openApptModal(eid,ds,hs){
+  document.getElementById('am-id').value=eid||'';
+  document.getElementById('am-t').textContent=eid?'แก้ไขนัด':'เพิ่มนัด';
+  document.getElementById('am-c').innerHTML=`<option value="">— เลือก —</option>${C.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}`;
+  document.getElementById('am-j').innerHTML=`<option value="">— ไม่ระบุ —</option>${J.map(j=>`<option value="${j.id}">${j.code||''} ${j.custName||''}</option>`).join('')}`;
+  if(eid){const a=A.find(x=>x.id==eid);if(a){document.getElementById('am-c').value=a.custId||'';document.getElementById('am-j').value=a.jobId||'';document.getElementById('am-dt').value=a.datetime||'';document.getElementById('am-type').value=a.type||'นัดซ่อม';document.getElementById('am-nt').value=a.note||'';}}
+  else{document.getElementById('am-c').value='';document.getElementById('am-j').value='';document.getElementById('am-dt').value=ds&&hs?`${ds}T${String(hs).padStart(2,'0')}:00`:'';document.getElementById('am-type').value='นัดซ่อม';document.getElementById('am-nt').value='';}
+  openModal('modal-appt');
+}
+function editAppt(id){openApptModal(id);}
+function saveAppt(){
+  const dt=document.getElementById('am-dt').value;if(!dt){alert('กรุณาเลือกวันที่');return;}
+  const eid=document.getElementById('am-id').value;
+  const obj={id:eid?parseInt(eid):Date.now(),custId:document.getElementById('am-c').value||null,jobId:document.getElementById('am-j').value||null,datetime:dt,type:document.getElementById('am-type').value,note:document.getElementById('am-nt').value.trim()};
+  if(eid){const i=A.findIndex(x=>x.id==eid);if(i>=0)A[i]=obj;}else A.push(obj);
+  save();closeModal('modal-appt');toast('บันทึกนัดแล้ว ✓');renderCal();
+}
+function delAppt(id){if(!confirm('ลบ?'))return;A=A.filter(a=>a.id!=id);save();renderCal();}
+
+// ── JOB PARTS ROWS ──
+function addJPR(pid,qty){
+  const i=jpr.length;jpr.push({pid:pid||'',qty:qty||1});
+  const div=document.createElement('div');div.id=`jpr${i}`;div.style.cssText='display:flex;gap:6px;margin-bottom:4px;align-items:center';
+  div.innerHTML=`<select onchange="jpr[${i}].pid=this.value;recJP()" style="flex:2;font-size:12px"><option value="">— เลือกอะไหล่ —</option>${P.map(p=>`<option value="${p.id}"${p.id==pid?' selected':''}>${p.code?p.code+' ':''}${p.name} (มี ${p.qty||0}, ${fmt(p.sell||0)})</option>`).join('')}</select><input type="number" min="1" value="${qty||1}" style="width:60px" oninput="jpr[${i}].qty=+this.value;recJP()"><span style="font-size:11px;color:var(--tx3)">ชิ้น</span><button class="btn bd2 bsm bic" onclick="rmJPR(${i})">✕</button>`;
+  document.getElementById('jpr-list').appendChild(div);recJP();
+}
+function rmJPR(i){jpr[i]=null;const el=document.getElementById('jpr'+i);if(el)el.remove();recJP();}
+function recJP(){let t=0;jpr.forEach(r=>{if(!r)return;const p=gP(r.pid);if(p)t+=(p.sell||0)*(r.qty||1);});document.getElementById('jm-pt').value=t||'';calcJT();}
+function calcJT(){const l=parseFloat(document.getElementById('jm-lb').value)||0,p=parseFloat(document.getElementById('jm-pt').value)||0,s=parseFloat(document.getElementById('jm-sv').value)||0;document.getElementById('jm-tot').value=fmt(l+p+s);}
+
+// ── JOB MODAL ──
+function openJobModal(eid){
+  jpr=[];document.getElementById('jpr-list').innerHTML='';
+  document.getElementById('jm-id').value=eid||'';
+  document.getElementById('jm-t').textContent=eid?'แก้ไขงานซ่อม':'บันทึกงานซ่อม';
+  const fS=(id,val)=>{const sel=document.getElementById(id);sel.innerHTML=`<option value="">— เลือก —</option>${S.map(s=>`<option value="${s.id}"${s.id==val?' selected':''}>${s.name}</option>`).join('')}`;if(val)sel.value=val;};
+  const cs=document.getElementById('jm-c');
+  cs.innerHTML=`<option value="">— เลือกหรือเพิ่มใหม่ —</option><option value="__new__">➕ เพิ่มใหม่...</option>${[...C].sort((a,b)=>a.name.localeCompare(b.name,'th')).map(c=>`<option value="${c.id}">${c.code?c.code+' ':''}${c.name}${c.phone?' ('+c.phone+')':''}</option>`).join('')}`;
+  fS('jm-adm','');fS('jm-tec','');
+  document.getElementById('iac-f').style.display='none';document.getElementById('ci-box').style.display='none';document.getElementById('appt-row').style.display='none';
+  if(eid){
+    const j=J.find(x=>x.id==eid);
+    if(j){
+      cs.value=j.custId||'';fS('jm-adm',j.adminId);fS('jm-tec',j.techId);
+      document.getElementById('jm-d').value=j.date;document.getElementById('jm-tp').value=j.type||'shop';document.getElementById('jm-code').value=j.code||'';
+      document.getElementById('jm-dc').value=j.dcat||'';document.getElementById('jm-br').value=j.brand||'';document.getElementById('jm-mo').value=j.model||'';document.getElementById('jm-sn').value=j.sn||'';
+      document.getElementById('jm-sym').value=j.symptom||'';document.getElementById('jm-nt').value=j.note||'';
+      document.getElementById('jm-lb').value=j.labor||'';document.getElementById('jm-pt').value=j.partsT||'';document.getElementById('jm-sv').value=j.svcFee||'';document.getElementById('jm-tot').value=fmt(j.total||0);
+      document.getElementById('jm-st').value=j.status||'รอซ่อม';document.getElementById('jm-ap').value=j.apptDT||'';document.getElementById('jm-pk').value=j.pickup||'';
+      if(j.status==='นัดลูกค้าแล้ว')document.getElementById('appt-row').style.display='';
+      if(j.custId)showCI(j.custId);
+      (j.pList||[]).forEach(r=>addJPR(r.pid,r.qty));
+    }
+  }else{
+    cs.value='';document.getElementById('jm-d').value=td();
+    ['jm-dc','jm-br','jm-mo','jm-sn','jm-sym','jm-nt','jm-lb','jm-sv','jm-tot'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('jm-pt').value='';document.getElementById('jm-st').value='รอซ่อม';document.getElementById('jm-ap').value='';document.getElementById('jm-pk').value='';
+    document.getElementById('jm-tp').value='shop';updCode();
+  }
+  openModal('modal-job');
+}
+function updCode(){if(!document.getElementById('jm-id').value)document.getElementById('jm-code').value=genJC(document.getElementById('jm-tp').value);}
+function onCS(){const v=document.getElementById('jm-c').value;document.getElementById('iac-f').style.display=v==='__new__'?'':'none';document.getElementById('ci-box').style.display=(v&&v!=='__new__')?'':'none';if(v&&v!=='__new__')showCI(v);}
+function showCI(id){const c=gC(id);if(!c)return;document.getElementById('ci-nm').textContent=(c.code?c.code+' ':'')+c.name;document.getElementById('ci-ph').textContent=c.phone?'📞 '+c.phone:'';document.getElementById('ci-ln').textContent=c.line?'💬 '+c.line:'';document.getElementById('ci-box').style.display='';}
+function togAppt(){document.getElementById('appt-row').style.display=document.getElementById('jm-st').value==='นัดลูกค้าแล้ว'?'':'none';}
+function saveJob(){
+  const dc=document.getElementById('jm-dc').value||document.getElementById('jm-br').value||document.getElementById('jm-mo').value;
+  if(!dc){alert('กรุณาระบุประเภทหรือยี่ห้อสินค้า');return;}
+  const cs=document.getElementById('jm-c').value;let cId=null,cNm='';
+  if(cs==='__new__'){
+    const nm=document.getElementById('jc-nm').value.trim();if(!nm){alert('กรุณากรอกชื่อลูกค้า');return;}
+    const code=genCC();const nc={id:Date.now(),code,name:nm,phone:document.getElementById('jc-ph').value.trim(),line:document.getElementById('jc-ln').value.trim(),address:document.getElementById('jc-ad').value.trim(),note:'',date:td()};
+    C.push(nc);cId=nc.id;cNm=nc.name;
+  }else if(cs){cId=parseInt(cs);const c=gC(cId);if(c)cNm=c.name;}
+  const lb=parseFloat(document.getElementById('jm-lb').value)||0,pt=parseFloat(document.getElementById('jm-pt').value)||0,sv=parseFloat(document.getElementById('jm-sv').value)||0;
+  const eid=document.getElementById('jm-id').value;
+  const status=document.getElementById('jm-st').value;
+  const validP=jpr.filter(r=>r&&r.pid);
+  const obj={id:eid?parseInt(eid):Date.now(),code:document.getElementById('jm-code').value,type:document.getElementById('jm-tp').value,custId:cId,custName:cNm,adminId:document.getElementById('jm-adm').value||null,techId:document.getElementById('jm-tec').value||null,dcat:document.getElementById('jm-dc').value,brand:document.getElementById('jm-br').value,model:document.getElementById('jm-mo').value,sn:document.getElementById('jm-sn').value,symptom:document.getElementById('jm-sym').value.trim(),note:document.getElementById('jm-nt').value.trim(),labor:lb,partsT:pt,svcFee:sv,total:lb+pt+sv,date:document.getElementById('jm-d').value||td(),status,apptDT:status==='นัดลูกค้าแล้ว'?document.getElementById('jm-ap').value:'',pickup:document.getElementById('jm-pk').value,pList:validP};
+  if(isInc(status)){
+    const prev=eid?J.find(x=>x.id==eid):null;const prevS=prev?prev.status:'';
+    if(!isInc(prevS))validP.forEach(r=>{const p=gP(r.pid);if(p){p.qty=Math.max(0,(p.qty||0)-(r.qty||1));p.lastUsed=td();if(!p.usageLog)p.usageLog=[];p.usageLog.push({date:td(),qty:r.qty||1,jobCode:obj.code,note:'งาน '+obj.code});}}); 
+  }
+  if(eid){const i=J.findIndex(x=>x.id==eid);if(i>=0)J[i]=obj;}else J.push(obj);
+  save();closeModal('modal-job');toast('บันทึกงานซ่อมแล้ว ✓');
+  if(cp==='jobs')renderJobs();if(cp==='dash')renderDash();
+}
+function delJob(id){if(!confirm('ลบงานนี้?'))return;J=J.filter(j=>j.id!=id);save();toast('ลบแล้ว');renderJobs();}
+function setJS(id,v){const j=J.find(x=>x.id==id);if(j){const w=isInc(j.status);j.status=v;if(isInc(v)&&!w)(j.pList||[]).forEach(r=>{const p=gP(r.pid);if(p){p.qty=Math.max(0,(p.qty||0)-(r.qty||1));p.lastUsed=td();if(!p.usageLog)p.usageLog=[];p.usageLog.push({date:td(),qty:r.qty||1,jobCode:j.code,note:'งาน '+j.code});}});save();}}
+
+function renderJobs(){
+  const q=(document.getElementById('j-q').value||'').toLowerCase();
+  const sf=document.getElementById('j-st').value,tp=document.getElementById('j-tp').value;
+  const df=document.getElementById('j-df').value,dt=document.getElementById('j-dt').value;
+  let list=[...J].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).filter(j=>{
+    if(sf&&j.status!==sf)return false;if(tp&&j.type!==tp)return false;
+    if(q&&!(j.custName||'').toLowerCase().includes(q)&&!(j.code||'').toLowerCase().includes(q)&&!(j.brand||'').toLowerCase().includes(q))return false;
+    if(df&&j.date<df)return false;if(dt&&j.date>dt)return false;return true;
+  });
+  const tb=document.getElementById('j-tb'),em=document.getElementById('j-em');
+  if(!list.length){tb.innerHTML='';em.style.display='';return;}em.style.display='none';
+  tb.innerHTML=list.map(j=>{
+    const cl=j.status==='รอซ่อม'?'bWait':j.status==='ซ่อมเสร็จ'?'bDone':j.status==='รับคืนแล้ว'?'bTaken':j.status==='นัดลูกค้าแล้ว'?'bAppt':j.status==='รอเบิกอะไหล่'?'bParts':'bCancel';
+    const a=gS(j.adminId),t=gS(j.techId);
+    const dl=[j.dcat,j.brand,j.model].filter(Boolean).join(' ');
+    return`<tr><td class="mn" style="font-size:11px">${j.code||''}</td><td style="white-space:nowrap;font-size:12px">${fD(j.date)}</td><td style="font-weight:500">${j.custName||'—'}</td><td style="font-size:12px">${dl||'—'}</td><td style="font-size:12px;color:var(--tx2)">${a?a.name:'—'}</td><td style="font-size:12px;color:var(--tx2)">${t?t.name:'—'}</td><td class="mn">${fmt(j.labor)}</td><td class="mn">${fmt(j.partsT)}</td><td class="mn" style="font-weight:500">${fmt(j.total)}</td>
+    <td><select class="badge ${cl}" style="border:none;cursor:pointer;padding:2px 5px;font-family:'Sarabun',sans-serif;font-size:11px" onchange="setJS(${j.id},this.value);this.className='badge bWait'">
+      <option${j.status==='รอซ่อม'?' selected':''}>รอซ่อม</option>
+      <option${j.status==='รอเบิกอะไหล่'?' selected':''}>รอเบิกอะไหล่</option>
+      <option${j.status==='นัดลูกค้าแล้ว'?' selected':''}>นัดลูกค้าแล้ว</option>
+      <option${j.status==='ซ่อมเสร็จ'?' selected':''}>ซ่อมเสร็จ</option>
+      <option${j.status==='รับคืนแล้ว'?' selected':''}>รับคืนแล้ว</option>
+      <option${j.status==='ลูกค้าไม่ซ่อม'?' selected':''}>ลูกค้าไม่ซ่อม</option>
+    </select></td>
+    <td style="font-size:11px;color:var(--pu)">${j.apptDT?fDT(j.apptDT):'—'}</td>
+    <td><div style="display:flex;gap:3px"><button class="btn bs bsm bic" onclick="openJobModal(${j.id})">✏️</button><button class="btn bd2 bsm bic" onclick="delJob(${j.id})">🗑️</button></div></td></tr>`;
+  }).join('');
+}
+
+// ── DEVICES ──
+function openDevModal(eid){
+  document.getElementById('dm-id').value=eid||'';document.getElementById('dm-t').textContent=eid?'แก้ไข':'เพิ่มสินค้า';
+  const ow=document.getElementById('dm-ow');ow.innerHTML=`<option value="">— ไม่ระบุ —</option>${C.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}`;
+  if(eid){const d=D.find(x=>x.id==eid);if(d){document.getElementById('dm-cat').value=d.cat;document.getElementById('dm-br').value=d.brand||'';document.getElementById('dm-mo').value=d.model||'';document.getElementById('dm-sn').value=d.sn||'';document.getElementById('dm-sym').value=d.symptom||'';ow.value=d.ownerId||'';
+    document.getElementById('dm-imgd').value=d.img||'';const pv=document.getElementById('dm-pv');if(d.img){pv.src=d.img;pv.style.display='block';}else{pv.style.display='none';}
+  }}
+  else{['dm-br','dm-mo','dm-sn','dm-sym'].forEach(i=>document.getElementById(i).value='');document.getElementById('dm-cat').value='เครื่องปรับอากาศ';ow.value='';document.getElementById('dm-imgd').value='';document.getElementById('dm-pv').style.display='none';document.getElementById('dm-img').value='';}
+  openModal('modal-dev');
+}
+function saveDev(){
+  const eid=document.getElementById('dm-id').value;const ow=document.getElementById('dm-ow').value;const owC=gC(ow);
+  const obj={id:eid?parseInt(eid):Date.now(),cat:document.getElementById('dm-cat').value,brand:document.getElementById('dm-br').value.trim(),model:document.getElementById('dm-mo').value.trim(),sn:document.getElementById('dm-sn').value.trim(),symptom:document.getElementById('dm-sym').value.trim(),ownerId:ow||null,ownerName:owC?owC.name:'',img:document.getElementById('dm-imgd').value};
+  if(eid){const i=D.findIndex(x=>x.id==eid);if(i>=0)D[i]=obj;}else D.push(obj);
+  save();closeModal('modal-dev');toast('บันทึกแล้ว ✓');renderDevs();
+}
+function delDev(id){if(!confirm('ลบ?'))return;D=D.filter(d=>d.id!=id);save();renderDevs();}
+function renderDevs(){
+  const q=(document.getElementById('dv-q').value||'').toLowerCase();
+  const cat=document.getElementById('dv-cat').value;
+  const cats=[...new Set(D.map(d=>d.cat))];
+  const cf=document.getElementById('dv-cat');const cc=cf.value;
+  cf.innerHTML=`<option value="">ทุกประเภท</option>${cats.map(c=>`<option value="${c}"${c===cc?' selected':''}>${c}</option>`).join('')}`;
+  let list=D.filter(d=>{if(cat&&d.cat!==cat)return false;if(q&&!(d.brand||'').toLowerCase().includes(q)&&!(d.model||'').toLowerCase().includes(q)&&!(d.cat||'').toLowerCase().includes(q))return false;return true;});
+  const tb=document.getElementById('dv-tb'),em=document.getElementById('dv-em');
+  if(!list.length){tb.innerHTML='';em.style.display='';return;}em.style.display='none';
+  tb.innerHTML=list.map(d=>{const jc=J.filter(j=>j.sn&&j.sn===d.sn).length;return`<tr><td><span class="chip">${d.cat}</span></td><td>${d.brand||'—'}</td><td>${d.model||'—'}</td><td class="mn">${d.sn||'—'}</td><td style="font-size:12px;color:var(--tx2)">${d.symptom||'—'}</td><td>${d.ownerName||'—'}</td><td><span style="background:var(--inl);color:var(--in);padding:2px 8px;border-radius:99px;font-size:11px">${jc} งาน</span></td><td><div style="display:flex;gap:3px"><button class="btn bs bsm bic" onclick="openDevModal(${d.id})">✏️</button><button class="btn bd2 bsm bic" onclick="delDev(${d.id})">🗑️</button></div></td></tr>`;}).join('');
+}
+
+// ── PARTS ──
+function openPartModal(eid){
+  document.getElementById('pm-id').value=eid||'';document.getElementById('pm-t').textContent=eid?'แก้ไข':'เพิ่มอะไหล่';
+  if(eid){const p=P.find(x=>x.id==eid);if(p){document.getElementById('pm-code').value=p.code||'';document.getElementById('pm-nm').value=p.name;document.getElementById('pm-qty').value=p.qty||0;document.getElementById('pm-min').value=p.minQty||1;document.getElementById('pm-buy').value=p.buy||'';document.getElementById('pm-sel').value=p.sell||'';document.getElementById('pm-din').value=p.dateIn||'';document.getElementById('pm-src').value=p.source||'';document.getElementById('pm-nt').value=p.note||'';document.getElementById('pm-sd').value=p.slip||'';const pv=document.getElementById('pm-pv');if(p.slip){pv.src=p.slip;pv.style.display='block';}else{pv.src='';pv.style.display='none';}}}
+  else{['pm-code','pm-nm','pm-src','pm-nt','pm-buy','pm-sel','pm-sd'].forEach(i=>document.getElementById(i).value='');document.getElementById('pm-qty').value='';document.getElementById('pm-min').value=1;document.getElementById('pm-din').value=td();document.getElementById('pm-pv').style.display='none';document.getElementById('pm-sl').value='';}
+  openModal('modal-part');
+}
+function savePart(){
+  const nm=document.getElementById('pm-nm').value.trim();if(!nm){alert('กรุณากรอกชื่ออะไหล่');return;}
+  const eid=document.getElementById('pm-id').value;
+  const newQty=parseInt(document.getElementById('pm-qty').value)||0;
+  const existing=eid?P.find(x=>x.id==eid):null;
+  const obj={
+    id:eid?parseInt(eid):Date.now(),
+    code:document.getElementById('pm-code').value.trim(),
+    name:nm,
+    qty:newQty,
+    minQty:parseInt(document.getElementById('pm-min').value)||1,
+    buy:parseFloat(document.getElementById('pm-buy').value)||0,
+    sell:parseFloat(document.getElementById('pm-sel').value)||0,
+    dateIn:document.getElementById('pm-din').value||td(),
+    source:document.getElementById('pm-src').value.trim(),
+    note:document.getElementById('pm-nt').value.trim(),
+    slip:document.getElementById('pm-sd').value,
+    lastUsed:existing?existing.lastUsed:'',
+    usageLog:existing?existing.usageLog||[]:[]
+  };
+  if(eid){const i=P.findIndex(x=>x.id==eid);if(i>=0)P[i]=obj;}else P.push(obj);
+  save();closeModal('modal-part');toast('บันทึกแล้ว ✓');renderParts();
+}
+function delPart(id){if(!confirm('ลบ?'))return;P=P.filter(p=>p.id!=id);save();renderParts();}
+
+function openRestockModal(pid){
+  const p=gP(pid);if(!p)return;
+  document.getElementById('rs-id').value=pid;
+  document.getElementById('rs-t').textContent='เพิ่มสต็อก — '+p.name;
+  document.getElementById('rs-nm-lbl').textContent=p.name+(p.code?' ('+p.code+')':'');
+  document.getElementById('rs-cur-qty').textContent=p.qty||0;
+  document.getElementById('rs-qty').value='';
+  document.getElementById('rs-date').value=td();
+  document.getElementById('rs-note').value='';
+  openModal('modal-restock');
+}
+function saveRestock(){
+  const pid=document.getElementById('rs-id').value;
+  const addQty=parseInt(document.getElementById('rs-qty').value)||0;
+  if(addQty<=0){alert('กรุณากรอกจำนวนที่รับเข้า');return;}
+  const p=gP(pid);if(!p)return;
+  p.qty=(p.qty||0)+addQty;
+  if(!p.restockLog)p.restockLog=[];
+  p.restockLog.push({date:document.getElementById('rs-date').value,qty:addQty,note:document.getElementById('rs-note').value.trim()});
+  save();closeModal('modal-restock');toast(`เพิ่มสต็อก +${addQty} ชิ้น ✓`);renderParts();
+}
+
+function showPartLog(pid){
+  const p=gP(pid);if(!p)return;
+  document.getElementById('pl-t').textContent='ประวัติ — '+p.name;
+  const usageLog=p.usageLog||[];
+  const restockLog=p.restockLog||[];
+  const allLogs=[
+    ...usageLog.map(l=>({...l,_type:'out'})),
+    ...restockLog.map(l=>({...l,_type:'in'}))
+  ].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('pl-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:var(--sf2);border-radius:var(--r);padding:10px"><div class="sl">สต็อกปัจจุบัน</div><div style="font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;${(p.qty||0)<=0?'color:var(--dn)':(p.qty||0)<=(p.minQty||1)?'color:var(--or)':'color:var(--ac)'}">${p.qty||0} ชิ้น</div></div>
+      <div style="background:var(--sf2);border-radius:var(--r);padding:10px"><div class="sl">รับเข้าทั้งหมด</div><div style="font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--ac)">${restockLog.reduce((s,l)=>s+(l.qty||0),0)} ชิ้น</div></div>
+      <div style="background:var(--sf2);border-radius:var(--r);padding:10px"><div class="sl">จ่ายออกทั้งหมด</div><div style="font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--dn)">${usageLog.reduce((s,l)=>s+(l.qty||0),0)} ชิ้น</div></div>
+    </div>
+    ${!allLogs.length?'<p style="font-size:13px;color:var(--tx3);text-align:center;padding:20px">ยังไม่มีประวัติ</p>':
+    `<table style="width:100%;font-size:13px;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd);font-size:10px;color:var(--tx3);text-transform:uppercase;background:var(--sf2)">วันที่</th><th style="text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd);font-size:10px;color:var(--tx3);text-transform:uppercase;background:var(--sf2)">ประเภท</th><th style="text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd);font-size:10px;color:var(--tx3);text-transform:uppercase;background:var(--sf2)">จำนวน</th><th style="text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd);font-size:10px;color:var(--tx3);text-transform:uppercase;background:var(--sf2)">หมายเหตุ</th></tr></thead>
+      <tbody>${allLogs.map(l=>`<tr><td style="padding:8px 10px;border-bottom:1px solid var(--bd);white-space:nowrap">${fD(l.date)}</td><td style="padding:8px 10px;border-bottom:1px solid var(--bd)">${l._type==='in'?'<span class="badge bDone">รับเข้า</span>':'<span class="badge bCancel">จ่ายออก</span>'}</td><td style="padding:8px 10px;border-bottom:1px solid var(--bd);font-family:\'IBM Plex Mono\',monospace;${l._type==='in'?'color:var(--ac)':'color:var(--dn)'}">${l._type==='in'?'+':'−'}${l.qty||0} ชิ้น</td><td style="padding:8px 10px;border-bottom:1px solid var(--bd);font-size:12px;color:var(--tx2)">${l.note||l.jobCode||'—'}</td></tr>`).join('')}</tbody>
+    </table>`}`;
+  openModal('modal-part-log');
+}
+
+function renderParts(){
+  const q=(document.getElementById('p-q').value||'').toLowerCase();const sf=document.getElementById('p-st').value;
+  let list=[...P].sort((a,b)=>(b.dateIn||'').localeCompare(a.dateIn||'')||b.id-a.id).filter(p=>{const st=p.qty<=0?'out':p.qty<=(p.minQty||1)?'low':'ok';if(sf&&st!==sf)return false;if(q&&!(p.name||'').toLowerCase().includes(q)&&!(p.code||'').toLowerCase().includes(q))return false;return true;});
+  const tb=document.getElementById('p-tb'),em=document.getElementById('p-em');
+  if(!list.length){tb.innerHTML='';em.style.display='';return;}em.style.display='none';
+  tb.innerHTML=list.map(p=>{
+    const st=p.qty<=0?'out':p.qty<=(p.minQty||1)?'low':'ok';
+    const sb2=st==='ok'?`<span class="badge bDone">มีสต็อก</span>`:st==='low'?`<span class="badge bParts">ใกล้หมด</span>`:`<span class="badge bCancel">หมด</span>`;
+    const lastDispatch=(p.usageLog&&p.usageLog.length)?p.usageLog[p.usageLog.length-1].date:'';
+    return`<tr>
+      <td class="mn">${p.code||'—'}</td>
+      <td style="font-weight:500">${p.name}${p.note?`<div style="font-size:11px;color:var(--tx3)">${p.note}</div>`:''}</td>
+      <td style="font-weight:500;${p.qty<=0?'color:var(--dn)':p.qty<=(p.minQty||1)?'color:var(--or)':''}">${p.qty||0}</td>
+      <td style="color:var(--tx3)">${p.minQty||1}</td>
+      <td class="mn">${fmt(p.buy)}</td>
+      <td class="mn">${fmt(p.sell)}</td>
+      <td style="font-size:12px;color:var(--tx2)">${p.source||'—'}</td>
+      <td style="white-space:nowrap;font-size:12px">${fD(p.dateIn)}</td>
+      <td style="white-space:nowrap;font-size:12px;${lastDispatch?'color:var(--or)':''}">${lastDispatch?fD(lastDispatch):'—'}</td>
+      <td>${p.slip?`<img src="${p.slip}" class="slip-th" onclick="viewSlip(this.src)">`:' —'}</td>
+      <td>${sb2}</td>
+      <td><div style="display:flex;gap:3px;flex-wrap:wrap">
+        <button class="btn bg bsm bic" title="เพิ่มสต็อก" onclick="openRestockModal(${p.id})">+📦</button>
+        <button class="btn bs bsm bic" title="ประวัติ" onclick="showPartLog(${p.id})">📋</button>
+        <button class="btn bs bsm bic" onclick="openPartModal(${p.id})">✏️</button>
+        <button class="btn bd2 bsm bic" onclick="delPart(${p.id})">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── GOODS ──
+function openGoodModal(eid){
+  document.getElementById('gm-id').value=eid||'';document.getElementById('gm-t').textContent=eid?'แก้ไข':'เพิ่มสินค้านำเข้า';
+  if(eid){const g=G.find(x=>x.id==eid);if(g){document.getElementById('gm-code').value=g.code||'';document.getElementById('gm-nm').value=g.name;document.getElementById('gm-cat').value=g.cat||'';document.getElementById('gm-qty').value=g.qty||1;document.getElementById('gm-buy').value=g.buy||'';document.getElementById('gm-sel').value=g.sell||'';document.getElementById('gm-din').value=g.dateIn||'';document.getElementById('gm-src').value=g.source||'';document.getElementById('gm-sd').value=g.slip||'';const pv=document.getElementById('gm-pv');if(g.slip){pv.src=g.slip;pv.style.display='block';}else{pv.src='';pv.style.display='none';}}}
+  else{['gm-code','gm-nm','gm-cat','gm-src','gm-buy','gm-sel','gm-sd'].forEach(i=>document.getElementById(i).value='');document.getElementById('gm-qty').value=1;document.getElementById('gm-din').value=td();document.getElementById('gm-pv').style.display='none';document.getElementById('gm-sl').value='';}
+  openModal('modal-good');
+}
+function saveGood(){
+  const nm=document.getElementById('gm-nm').value.trim();if(!nm){alert('กรุณากรอกชื่อ');return;}
+  const eid=document.getElementById('gm-id').value;
+  const obj={id:eid?parseInt(eid):Date.now(),code:document.getElementById('gm-code').value.trim(),name:nm,cat:document.getElementById('gm-cat').value.trim(),qty:parseInt(document.getElementById('gm-qty').value)||1,buy:parseFloat(document.getElementById('gm-buy').value)||0,sell:parseFloat(document.getElementById('gm-sel').value)||0,dateIn:document.getElementById('gm-din').value||td(),source:document.getElementById('gm-src').value.trim(),slip:document.getElementById('gm-sd').value};
+  if(eid){const i=G.findIndex(x=>x.id==eid);if(i>=0)G[i]=obj;}else G.push(obj);
+  save();closeModal('modal-good');toast('บันทึกแล้ว ✓');renderGoods();
+}
+function delGood(id){if(!confirm('ลบ?'))return;G=G.filter(g=>g.id!=id);save();renderGoods();}
+function renderGoods(){
+  const q=(document.getElementById('g-q').value||'').toLowerCase();
+  let list=[...G].sort((a,b)=>b.id-a.id).filter(g=>!q||(g.name||'').toLowerCase().includes(q)||(g.code||'').toLowerCase().includes(q));
+  const tb=document.getElementById('g-tb'),em=document.getElementById('g-em');
+  if(!list.length){tb.innerHTML='';em.style.display='';return;}em.style.display='none';
+  tb.innerHTML=list.map(g=>`<tr><td class="mn">${g.code||'—'}</td><td style="font-weight:500">${g.name}</td><td><span class="chip">${g.cat||'—'}</span></td><td>${g.qty||1}</td><td class="mn">${fmt(g.buy)}</td><td class="mn">${fmt(g.sell)}</td><td style="font-size:12px;color:var(--tx2)">${g.source||'—'}</td><td style="white-space:nowrap;font-size:12px">${fD(g.dateIn)}</td><td>${g.slip?`<img src="${g.slip}" class="slip-th" onclick="viewSlip(this.src)">`:' —'}</td><td><div style="display:flex;gap:3px"><button class="btn bs bsm bic" onclick="openGoodModal(${g.id})">✏️</button><button class="btn bd2 bsm bic" onclick="delGood(${g.id})">🗑️</button></div></td></tr>`).join('');
+}
+
+// ── CUSTOMERS ──
+function openCustModal(eid){
+  document.getElementById('cm-id').value=eid||'';document.getElementById('cm-t').textContent=eid?'แก้ไขลูกค้า':'เพิ่มลูกค้าใหม่';
+  if(eid){const c=gC(eid);if(c){document.getElementById('cm-nm').value=c.name;document.getElementById('cm-ph').value=c.phone||'';document.getElementById('cm-ln').value=c.line||'';document.getElementById('cm-ad').value=c.address||'';document.getElementById('cm-nt').value=c.note||'';document.getElementById('cm-dt').value=c.date||td();}}
+  else{['cm-nm','cm-ph','cm-ln','cm-ad','cm-nt'].forEach(i=>document.getElementById(i).value='');document.getElementById('cm-dt').value=td();}
+  openModal('modal-cust');
+}
+function saveCust(){
+  const nm=document.getElementById('cm-nm').value.trim();if(!nm){alert('กรุณากรอกชื่อ');return;}
+  const eid=document.getElementById('cm-id').value;
+  const code=eid?gC(parseInt(eid))?.code||genCC():genCC();
+  const obj={id:eid?parseInt(eid):Date.now(),code,name:nm,phone:document.getElementById('cm-ph').value.trim(),line:document.getElementById('cm-ln').value.trim(),address:document.getElementById('cm-ad').value.trim(),note:document.getElementById('cm-nt').value.trim(),date:document.getElementById('cm-dt').value||td()};
+  if(eid){const i=C.findIndex(x=>x.id==eid);if(i>=0){C[i]=obj;J.forEach(j=>{if(j.custId==eid)j.custName=obj.name;});}}
+  else C.push(obj);
+  save();closeModal('modal-cust');toast('บันทึกแล้ว ✓');renderCusts();
+}
+function delCust(id){if(!confirm('ลบลูกค้า?'))return;C=C.filter(c=>c.id!=id);save();renderCusts();}
+function showHist(cId){
+  const c=gC(cId);if(!c)return;
+  const cj=J.filter(j=>j.custId==cId).sort((a,b)=>b.date.localeCompare(a.date));
+  const tot=cj.reduce((s,j)=>s+j.total,0);
+  const ca=A.filter(a=>a.custId==cId).sort((a,b)=>(a.datetime||'').localeCompare(b.datetime||''));
+  document.getElementById('ht-t').textContent='ประวัติ — '+c.name;
+  document.getElementById('ht-b').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="background:var(--sf2);border-radius:var(--r);padding:10px"><div class="sl">รหัสลูกค้า</div><div class="mn" style="font-weight:600;font-size:15px">${c.code||'—'}</div></div>
+      <div style="background:var(--sf2);border-radius:var(--r);padding:10px"><div class="sl">งานซ่อม</div><div class="sv b" style="font-size:18px">${cj.length}</div></div>
+      <div style="background:var(--sf2);border-radius:var(--r);padding:10px"><div class="sl">ยอดรวม</div><div class="sv g" style="font-size:18px">${fmt(tot)}</div></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      ${c.phone?`<span style="background:var(--sf2);padding:3px 8px;border-radius:99px;font-size:12px">📞 ${c.phone}</span>`:''}
+      ${c.line?`<span style="background:var(--sf2);padding:3px 8px;border-radius:99px;font-size:12px">💬 ${c.line}</span>`:''}
+    </div>
+    ${c.address?`<div style="font-size:12px;color:var(--tx2);margin-bottom:8px">📍 ${c.address}</div>`:''}
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn bs bsm" onclick="closeModal('modal-hist');openCustModal(${c.id})">✏️ แก้ไข</button></div>
+    <div class="dv"></div>
+    <div style="font-size:12px;font-weight:500;margin-bottom:6px">📅 นัดหมาย (${ca.length})</div>
+    ${!ca.length?'<p style="font-size:12px;color:var(--tx3)">ไม่มีนัด</p>':ca.map(a=>`<div style="font-size:12px;padding:3px 0;border-bottom:1px solid var(--bd)">${fDT(a.datetime)} — <span class="badge bAppt">${a.type}</span> ${a.note?'<span style="color:var(--tx2)">'+a.note+'</span>':''}</div>`).join('')}
+    <div class="dv"></div>
+    <div style="font-size:12px;font-weight:500;margin-bottom:8px">🔧 ประวัติซ่อม (${cj.length})</div>
+    ${!cj.length?'<p style="font-size:12px;color:var(--tx3)">ยังไม่มี</p>':cj.map(j=>`<div style="padding:8px 0;border-bottom:1px solid var(--bd)"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-weight:500;font-size:13px">${[j.dcat,j.brand,j.model].filter(Boolean).join(' ')||'—'}</div><div style="font-size:11px;color:var(--tx3)">${j.code||''} · ${fD(j.date)}${j.symptom?' · '+j.symptom:''}</div><div style="font-size:11px;color:var(--tx2)">ค่าแรง ${fmt(j.labor)} | อะไหล่ ${fmt(j.partsT)}</div></div><div style="text-align:right"><div class="mn" style="font-weight:500">${fmt(j.total)}</div>${sbadge(j.status)}</div></div></div>`).join('')}`;
+  openModal('modal-hist');
+}
+function renderCusts(){
+  const q=(document.getElementById('c-q').value||'').toLowerCase();
+  let list=[...C].sort((a,b)=>a.name.localeCompare(b.name,'th')).filter(c=>!q||(c.name||'').toLowerCase().includes(q)||(c.phone||'').includes(q)||(c.code||'').toLowerCase().includes(q));
+  const tb=document.getElementById('c-tb'),em=document.getElementById('c-em');
+  if(!list.length){tb.innerHTML='';em.style.display='';return;}em.style.display='none';
+  tb.innerHTML=list.map(c=>{const cnt=J.filter(j=>j.custId==c.id).length;const tot=J.filter(j=>j.custId==c.id).reduce((s,j)=>s+j.total,0);return`<tr><td class="mn">${c.code||'—'}</td><td style="font-weight:500">${c.name}</td><td>${c.phone||'—'}</td><td>${c.line||'—'}</td><td style="font-size:12px;color:var(--tx2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.address||'—'}</td><td><span style="background:var(--inl);color:var(--in);padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500">${cnt}</span></td><td class="mn" style="color:var(--ac)">${fmt(tot)}</td><td><div style="display:flex;gap:3px"><button class="btn bs bsm" onclick="showHist(${c.id})">ประวัติ</button><button class="btn bs bsm bic" onclick="openCustModal(${c.id})">✏️</button><button class="btn bd2 bsm bic" onclick="delCust(${c.id})">🗑️</button></div></td></tr>`;}).join('');
+}
+
+// ── STAFF ──
+function openStaffModal(eid){
+  document.getElementById('sm-id').value=eid||'';document.getElementById('sm-t').textContent=eid?'แก้ไขพนักงาน':'เพิ่มพนักงาน';
+  if(eid){const s=gS(eid);if(s){document.getElementById('sm-nm').value=s.name;document.getElementById('sm-pos').value=s.position||'';document.getElementById('sm-dept').value=s.dept;document.getElementById('sm-ph').value=s.phone||'';document.getElementById('sm-ln').value=s.line||'';document.getElementById('sm-start').value=s.startDate||'';document.getElementById('sm-sal').value=s.salary||'';document.getElementById('sm-ot').value=s.otRate||'';document.getElementById('sm-pd').value=s.photo||'';const pv=document.getElementById('sm-pv');if(s.photo){pv.src=s.photo;pv.style.display='block';}else{pv.src='';pv.style.display='none';}}}
+  else{['sm-nm','sm-pos','sm-ph','sm-ln','sm-sal','sm-ot','sm-pd'].forEach(i=>document.getElementById(i).value='');document.getElementById('sm-start').value=td();document.getElementById('sm-pv').style.display='none';document.getElementById('sm-ph2').value='';}
+  openModal('modal-staff');
+}
+function saveStaff(){
+  const nm=document.getElementById('sm-nm').value.trim();if(!nm){alert('กรุณากรอกชื่อ');return;}
+  const eid=document.getElementById('sm-id').value;
+  const ex=S.map(s=>{const n=parseInt((s.code||'').replace('EMP',''));return isNaN(n)?0:n;});
+  const code=eid?gS(parseInt(eid))?.code||'EMP'+String((ex.length?Math.max(...ex):0)+1).padStart(3,'0'):'EMP'+String((ex.length?Math.max(...ex):0)+1).padStart(3,'0');
+  const obj={id:eid?parseInt(eid):Date.now(),code,name:nm,position:document.getElementById('sm-pos').value.trim(),dept:document.getElementById('sm-dept').value,phone:document.getElementById('sm-ph').value.trim(),line:document.getElementById('sm-ln').value.trim(),startDate:document.getElementById('sm-start').value,salary:parseFloat(document.getElementById('sm-sal').value)||0,otRate:parseFloat(document.getElementById('sm-ot').value)||0,photo:document.getElementById('sm-pd').value};
+  if(eid){const i=S.findIndex(x=>x.id==eid);if(i>=0)S[i]=obj;}else S.push(obj);
+  save();closeModal('modal-staff');toast('บันทึกแล้ว ✓');renderStaff();
+}
+function delStaff(id){if(!confirm('ลบพนักงาน?'))return;S=S.filter(s=>s.id!=id);save();renderStaff();}
+function renderStaff(){
+  const df=document.getElementById('sf-dept').value;
+  let list=df?S.filter(s=>s.dept===df):S;
+  const el=document.getElementById('staff-list');
+  if(!list.length){el.innerHTML='<div class="est"><div class="ic">👤</div><p>ยังไม่มีพนักงาน</p></div>';return;}
+  const byD={};list.forEach(s=>{if(!byD[s.dept])byD[s.dept]=[];byD[s.dept].push(s);});
+  el.innerHTML=Object.entries(byD).map(([dept,ms])=>`
+    <div style="font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;padding:0 2px;margin-bottom:6px">${dept} (${ms.length})</div>
+    ${ms.map(s=>{
+      const sj=J.filter(j=>j.techId==s.id||j.adminId==s.id);
+      const sd=sj.filter(j=>isInc(j.status)).length;
+      const pct=sj.length?Math.round(sd/sj.length*100):0;
+      const startD=s.startDate?new Date(s.startDate):null;
+      const days=startD?Math.floor((new Date()-startD)/86400000):0;
+      const yrs=Math.floor(days/365),mos=Math.floor((days%365)/30);
+      const ws=days>0?`${yrs>0?yrs+'ปี ':''} ${mos}เดือน`:'—';
+      const draw=E.filter(e=>e.staffId==s.id).reduce((sum,e)=>sum+e.amount,0);
+      return`<div class="emp-card">
+        ${s.photo?`<img class="ava" src="${s.photo}">`:`<div class="ava-ph">👤</div>`}
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+            <div>
+              <div style="font-weight:500;font-size:14px">${s.name} <span class="chip">${s.code||''}</span></div>
+              <div style="font-size:12px;color:var(--tx2)">${s.position||''} · ${s.dept}</div>
+              <div style="font-size:12px;color:var(--tx3)">📞 ${s.phone||'—'} · 💬 ${s.line||'—'}</div>
+              <div style="font-size:12px;color:var(--tx3)">เริ่มงาน ${fD(s.startDate)} (${ws})</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--tx3)">เงินเดือน</div><div class="mn" style="font-weight:500">${fmt(s.salary)}</div>
+              <div style="font-size:10px;color:var(--tx3);margin-top:3px">เบิกแล้ว</div><div class="mn" style="color:var(--dn)">${fmt(draw)}</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div style="flex:1"><div style="font-size:11px;color:var(--tx3)">งาน ${sj.length} · เสร็จ ${sd} · ${pct}%</div><div class="pbar"><div class="pfill" style="width:${pct}%"></div></div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button class="btn bs bsm" onclick="openStaffModal(${s.id})">✏️</button>
+          <button class="btn bd2 bsm" onclick="delStaff(${s.id})">🗑️</button>
+        </div>
+      </div>`;
+    }).join('')}`).join('');
+}
+
+// ── EXPENSES ──
+function openExpModal(){
+  ['em-nm','em-amt'].forEach(i=>document.getElementById(i).value='');document.getElementById('em-dt').value=td();
+  document.getElementById('em-sf').innerHTML=`<option value="">— ไม่ระบุ —</option>${S.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}`;
+  openModal('modal-exp');
+}
+function saveExp(){
+  const nm=document.getElementById('em-nm').value.trim();const amt=parseFloat(document.getElementById('em-amt').value)||0;
+  if(!nm||!amt){alert('กรุณากรอกรายการและจำนวนเงิน');return;}
+  const sf=document.getElementById('em-sf').value;
+  E.push({id:Date.now(),name:nm,cat:document.getElementById('em-cat').value,amount:amt,date:document.getElementById('em-dt').value||td(),staffId:sf||null});
+  save();closeModal('modal-exp');toast('บันทึกแล้ว ✓');renderExps();
+}
+function delExp(id){if(!confirm('ลบ?'))return;E=E.filter(e=>e.id!=id);save();renderExps();}
+function renderExps(){
+  const mo=document.getElementById('e-mo').value||nowMo();
+  const list=E.filter(e=>moOf(e.date)===mo).sort((a,b)=>b.date.localeCompare(a.date));
+  const tot=list.reduce((s,e)=>s+e.amount,0);
+  document.getElementById('e-tot').textContent=list.length?`รวม ${fmt(tot)}`:'';
+  const tb=document.getElementById('e-tb'),em=document.getElementById('e-em');
+  if(!list.length){tb.innerHTML='';em.style.display='';return;}em.style.display='none';
+  tb.innerHTML=list.map(e=>{const s=gS(e.staffId);return`<tr><td style="white-space:nowrap">${fD(e.date)}</td><td>${e.name}</td><td><span class="chip">${e.cat}</span></td><td style="font-size:12px;color:var(--tx2)">${s?s.name:'—'}</td><td class="mn" style="color:var(--dn)">${fmt(e.amount)}</td><td><button class="btn bd2 bsm bic" onclick="delExp(${e.id})">🗑️</button></td></tr>`;}).join('');
+}
+
+// ── SUMMARY ──
+function renderSum(){
+  const mo=document.getElementById('s-mo').value||nowMo();
+  const mj=J.filter(j=>moOf(j.date)===mo&&isInc(j.status));
+  const me=E.filter(e=>moOf(e.date)===mo);
+  const income=mj.reduce((s,j)=>s+j.total,0),pts=mj.reduce((s,j)=>s+j.partsT,0),exptot=me.reduce((s,e)=>s+e.amount,0);
+  const profit=income-exptot;const pw=J.filter(j=>moOf(j.date)===mo&&!isInc(j.status)&&j.status!=='ลูกค้าไม่ซ่อม').length;
+  document.getElementById('s-stats').innerHTML=`
+    <div class="sc"><div class="sl">รายรับ</div><div class="sv g">${fmt(income)}</div></div>
+    <div class="sc"><div class="sl">ค่าอะไหล่</div><div class="sv o">${fmt(pts)}</div></div>
+    <div class="sc"><div class="sl">ค่าใช้จ่าย</div><div class="sv r">${fmt(exptot)}</div></div>
+    <div class="sc"><div class="sl">กำไรสุทธิ</div><div class="sv ${profit>=0?'g':'r'}">${fmt(profit)}</div></div>
+    <div class="sc"><div class="sl">รอซ่อม</div><div class="sv w">${pw}</div></div>`;
+  const jt=document.getElementById('s-jt'),je=document.getElementById('s-je'),et=document.getElementById('s-et'),ee=document.getElementById('s-ee');
+  if(!mj.length){jt.innerHTML='';je.style.display='';}else{je.style.display='none';jt.innerHTML=mj.sort((a,b)=>b.date.localeCompare(a.date)).map(j=>`<tr><td style="white-space:nowrap">${fD(j.date)}</td><td class="mn">${j.code||''}</td><td>${j.custName||'—'}</td><td class="mn">${fmt(j.total)}</td><td>${sbadge(j.status)}</td></tr>`).join('');}
+  if(!me.length){et.innerHTML='';ee.style.display='';}else{ee.style.display='none';et.innerHTML=me.sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr><td style="white-space:nowrap">${fD(e.date)}</td><td>${e.name}</td><td class="mn" style="color:var(--dn)">${fmt(e.amount)}</td></tr>`).join('');}
+}
+
+// ── EXCEL EXPORT ──
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const thM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  // Jobs
+  const jd=[['รหัสงาน','ประเภท','วันที่','ลูกค้า','ประเภทสินค้า','ยี่ห้อ','รุ่น','แอดมิน','ช่าง','ค่าแรง','อะไหล่','บริการ','รวม','สถานะ','วันรับเครื่อง']];
+  J.sort((a,b)=>b.date.localeCompare(a.date)).forEach(j=>{const a=gS(j.adminId),t=gS(j.techId);jd.push([j.code||'',j.type==='site'?'นอกสถานที่':'ร้าน',fD(j.date),j.custName||'',j.dcat||'',j.brand||'',j.model||'',a?a.name:'',t?t.name:'',j.labor||0,j.partsT||0,j.svcFee||0,j.total||0,j.status,fD(j.pickup)]);});
+  const jws=XLSX.utils.aoa_to_sheet(jd);jws['!cols']=[{wch:12},{wch:12},{wch:10},{wch:16},{wch:14},{wch:12},{wch:14},{wch:12},{wch:12},{wch:8},{wch:8},{wch:8},{wch:10},{wch:14},{wch:10}];XLSX.utils.book_append_sheet(wb,jws,'งานซ่อม');
+  // Custs
+  const cd=[['รหัส','ชื่อ','เบอร์','Line','ที่อยู่','งานซ่อม','ยอดรวม']];
+  C.forEach(c=>{const cnt=J.filter(j=>j.custId==c.id).length;const tot=J.filter(j=>j.custId==c.id).reduce((s,j)=>s+j.total,0);cd.push([c.code||'',c.name,c.phone||'',c.line||'',c.address||'',cnt,tot]);});
+  const cws=XLSX.utils.aoa_to_sheet(cd);cws['!cols']=[{wch:10},{wch:18},{wch:14},{wch:14},{wch:28},{wch:8},{wch:12}];XLSX.utils.book_append_sheet(wb,cws,'ลูกค้า');
+  // Parts
+  const pd=[['รหัส','ชื่ออะไหล่','จำนวน','ขั้นต่ำ','ราคาซื้อ','ราคาขาย','แหล่งที่มา','วันนำเข้า']];
+  P.forEach(p=>pd.push([p.code||'',p.name,p.qty||0,p.minQty||1,p.buy||0,p.sell||0,p.source||'',fD(p.dateIn)]));
+  const pws=XLSX.utils.aoa_to_sheet(pd);pws['!cols']=[{wch:12},{wch:20},{wch:8},{wch:8},{wch:10},{wch:10},{wch:20},{wch:12}];XLSX.utils.book_append_sheet(wb,pws,'อะไหล่');
+  // Staff
+  const sd=[['รหัส','ชื่อ','ตำแหน่ง','แผนก','เบอร์','เงินเดือน','วันเริ่มงาน','งาน','เสร็จ','%','เบิกแล้ว']];
+  S.forEach(s=>{const sj=J.filter(j=>j.techId==s.id||j.adminId==s.id);const sd2=sj.filter(j=>isInc(j.status)).length;const pct=sj.length?Math.round(sd2/sj.length*100):0;const draw=E.filter(e=>e.staffId==s.id).reduce((sum,e)=>sum+e.amount,0);sd.push([s.code||'',s.name,s.position||'',s.dept,s.phone||'',s.salary||0,fD(s.startDate),sj.length,sd2,pct+'%',draw]);});
+  const sws=XLSX.utils.aoa_to_sheet(sd);sws['!cols']=[{wch:8},{wch:16},{wch:14},{wch:14},{wch:14},{wch:10},{wch:12},{wch:6},{wch:6},{wch:6},{wch:10}];XLSX.utils.book_append_sheet(wb,sws,'พนักงาน');
+  // Exp
+  const ed=[['วันที่','รายการ','หมวด','พนักงาน','จำนวน']];
+  E.forEach(e=>{const s=gS(e.staffId);ed.push([fD(e.date),e.name,e.cat,s?s.name:'',e.amount]);});
+  const ews=XLSX.utils.aoa_to_sheet(ed);ews['!cols']=[{wch:12},{wch:24},{wch:14},{wch:14},{wch:12}];XLSX.utils.book_append_sheet(wb,ews,'ค่าใช้จ่าย');
+  // Summary
+  const ms=new Set();J.forEach(j=>ms.add(moOf(j.date)));E.forEach(e=>ms.add(moOf(e.date)));
+  const sumd=[['เดือน','งาน(เสร็จ)','รายรับ','อะไหล่','ค่าใช้จ่าย','กำไร','รอซ่อม','ไม่ซ่อม']];
+  [...ms].filter(Boolean).sort().reverse().forEach(m=>{const mj=J.filter(j=>moOf(j.date)===m&&isInc(j.status));const pw=J.filter(j=>moOf(j.date)===m&&!isInc(j.status)&&j.status!=='ลูกค้าไม่ซ่อม').length;const nc=J.filter(j=>moOf(j.date)===m&&j.status==='ลูกค้าไม่ซ่อม').length;const me=E.filter(e=>moOf(e.date)===m);const income=mj.reduce((s,j)=>s+j.total,0);const pts=mj.reduce((s,j)=>s+j.partsT,0);const exptot=me.reduce((s,e)=>s+e.amount,0);const[y,mo]=m.split('-');sumd.push([`${thM[parseInt(mo)-1]} ${parseInt(y)+543}`,mj.length,income,pts,exptot,income-exptot,pw,nc]);});
+  const suw=XLSX.utils.aoa_to_sheet(sumd);suw['!cols']=[{wch:12},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:8},{wch:8}];XLSX.utils.book_append_sheet(wb,suw,'สรุปรายเดือน');
+  const dn=new Date();XLSX.writeFile(wb,`PES_${dn.getFullYear()}${String(dn.getMonth()+1).padStart(2,'0')}${String(dn.getDate()).padStart(2,'0')}.xlsx`);
+  toast('ดาวน์โหลด Excel แล้ว ✓');
+}
+
+// ── INIT ──
+setMonth();
+</script>
+</body>
+</html>
